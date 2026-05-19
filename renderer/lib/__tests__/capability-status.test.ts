@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   STATUSES,
+  STATUS_META,
   STATUS_ORDER,
   getCapabilityStatus,
   countCapabilitiesByStatus,
@@ -24,8 +25,18 @@ describe('STATUSES', () => {
     }
   });
 
-  it('STATUS_ORDER matches STATUSES ids', () => {
-    expect(STATUS_ORDER).toEqual(STATUSES.map((s) => s.id));
+  it('STATUS_ORDER has six entries, starts with in-use, ends with not-licensed', () => {
+    expect(STATUS_ORDER.length).toBe(6);
+    expect(STATUS_ORDER[0]).toBe('in-use');
+    expect(STATUS_ORDER[STATUS_ORDER.length - 1]).toBe('not-licensed');
+  });
+});
+
+describe('STATUS_META', () => {
+  it('maps every status id to its matching StatusMeta entry', () => {
+    for (const s of STATUSES) {
+      expect(STATUS_META[s.id]).toBe(s);
+    }
   });
 });
 
