@@ -1,0 +1,6 @@
+node_modules
+dist
+dist-electron
+renderer/.next
+renderer/out
+pnpm-lock.yaml
