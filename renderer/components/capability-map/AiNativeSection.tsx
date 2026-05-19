@@ -23,17 +23,14 @@ function AiNativeSectionImpl({
   selectedCapabilityId,
   onPillClick,
 }: Props) {
-  const filterCap = (id: string, name: string) => {
-    if (searchTerm && !matchesSearch(name, searchTerm)) return false;
-    if (statusFilter.size > 0 && !statusFilter.has(getCapabilityStatus(capabilityStatus, id))) {
-      return false;
-    }
-    return true;
-  };
-
   const aiControlTower = useMemo(
-    () => groupedSeed.aiControlTower.capabilities.filter((c) => filterCap(c.id, c.name)),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    () =>
+      groupedSeed.aiControlTower.capabilities.filter((c) => {
+        if (searchTerm && !matchesSearch(c.name, searchTerm)) return false;
+        if (statusFilter.size > 0 && !statusFilter.has(getCapabilityStatus(capabilityStatus, c.id)))
+          return false;
+        return true;
+      }),
     [searchTerm, statusFilter, capabilityStatus],
   );
 
@@ -41,9 +38,16 @@ function AiNativeSectionImpl({
     () =>
       groupedSeed.pillars.map((p) => ({
         ...p,
-        visibleCapabilities: p.capabilities.filter((c) => filterCap(c.id, c.name)),
+        visibleCapabilities: p.capabilities.filter((c) => {
+          if (searchTerm && !matchesSearch(c.name, searchTerm)) return false;
+          if (
+            statusFilter.size > 0 &&
+            !statusFilter.has(getCapabilityStatus(capabilityStatus, c.id))
+          )
+            return false;
+          return true;
+        }),
       })),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [searchTerm, statusFilter, capabilityStatus],
   );
 

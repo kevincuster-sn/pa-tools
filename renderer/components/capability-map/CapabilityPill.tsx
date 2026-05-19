@@ -19,41 +19,42 @@ function CapabilityPillImpl({ capability, status, hasNotes, disabled, selected, 
   const interactive = !disabled && Boolean(onClick);
 
   return (
-    <button
-      type="button"
-      role="listitem"
-      aria-label={`${capability.name} — ${meta.label}`}
-      title={capability.name}
-      disabled={disabled}
-      aria-pressed={selected ?? undefined}
-      onClick={(e) => {
-        if (!interactive) return;
-        onClick!(capability.id, e.currentTarget);
-      }}
-      className={[
-        'relative flex h-7 w-full items-center gap-1.5 truncate rounded-sm border border-border pl-3 pr-2 text-left text-xs text-fg',
-        'focus:outline-none focus:ring-1 focus:ring-accent',
-        disabled ? 'pointer-events-none opacity-50 saturate-0' : 'hover:border-border-strong',
-        selected ? 'ring-1 ring-accent' : '',
-      ].join(' ')}
-      style={{
-        // ~7% tint of status color over bg
-        backgroundColor: `color-mix(in srgb, ${meta.color} 7%, var(--bg))`,
-      }}
-    >
-      <span
-        aria-hidden="true"
-        className="absolute inset-y-0 left-0 w-[5px] rounded-l-sm"
-        style={{ backgroundColor: meta.color }}
-      />
-      <span className="truncate">{capability.name}</span>
-      {hasNotes && (
+    <li role="listitem" className="w-full">
+      <button
+        type="button"
+        aria-label={`${capability.name} — ${meta.label}${hasNotes ? ', has notes' : ''}`}
+        title={capability.name}
+        disabled={disabled}
+        aria-pressed={selected ?? undefined}
+        onClick={(e) => {
+          if (!interactive) return;
+          onClick!(capability.id, e.currentTarget);
+        }}
+        className={[
+          'relative flex h-7 w-full items-center gap-1.5 truncate rounded-sm border border-border pl-3 pr-2 text-left text-xs text-fg',
+          'focus:outline-none focus:ring-1 focus:ring-accent',
+          disabled ? 'pointer-events-none opacity-50 saturate-0' : 'hover:border-border-strong',
+          selected ? 'ring-1 ring-accent' : '',
+        ].join(' ')}
+        style={{
+          // ~7% tint of status color over bg
+          backgroundColor: `color-mix(in srgb, ${meta.color} 7%, var(--bg))`,
+        }}
+      >
         <span
-          aria-label="has notes"
-          className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-fg-subtle"
+          aria-hidden="true"
+          className="absolute inset-y-0 left-0 w-[5px] rounded-l-sm"
+          style={{ backgroundColor: meta.color }}
         />
-      )}
-    </button>
+        <span className="truncate">{capability.name}</span>
+        {hasNotes && (
+          <span
+            aria-hidden="true"
+            className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-fg-subtle"
+          />
+        )}
+      </button>
+    </li>
   );
 }
 

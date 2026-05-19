@@ -17,7 +17,6 @@ interface Props {
 interface Position {
   top: number;
   left: number;
-  placement: 'below' | 'above';
 }
 
 const POPOVER_WIDTH = 320;
@@ -42,7 +41,7 @@ function computePosition(anchor: HTMLElement, popoverHeight: number): Position {
     viewportW - POPOVER_WIDTH - POPOVER_MARGIN,
   );
 
-  return { top, left, placement };
+  return { top, left };
 }
 
 export function StatusPopover({
@@ -56,12 +55,24 @@ export function StatusPopover({
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<Position | null>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
   useLayoutEffect(() => {
+    previousFocusRef.current = document.activeElement as HTMLElement | null;
     if (!ref.current) return;
     const measured = ref.current.getBoundingClientRect();
     setPos(computePosition(anchor, measured.height));
   }, [anchor]);
+
+  // Move focus into the popover once it is positioned, restore on unmount
+  useEffect(() => {
+    if (pos) {
+      ref.current?.focus();
+    }
+    return () => {
+      previousFocusRef.current?.focus?.();
+    };
+  }, [pos]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -94,13 +105,15 @@ export function StatusPopover({
     };
   }, [anchor, onClose]);
 
-  const groupId = `status-radio-${capabilityName.replace(/\s+/g, '-')}`;
+  const groupId = `status-radio-${capabilityName.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`;
 
   return (
     <div
       ref={ref}
       role="dialog"
+      aria-modal="false"
       aria-label={`Edit ${capabilityName}`}
+      tabIndex={-1}
       style={{
         position: 'fixed',
         top: pos?.top ?? -9999,
