@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, type ReactNode } from 'react';
 import { emptyDocument } from '../../shared/file-format';
 import type { FileIoError, OpenFileResult, SaveFileResult } from '../../shared/api';
 import { fileNameFromPath, useDocumentStore } from '../state/document';
@@ -18,8 +18,6 @@ function reportError(error: FileIoError): void {
 }
 
 export function AppShell({ children }: { children?: ReactNode }) {
-  const [activeFeature, setActiveFeature] = useState('capability-map');
-
   const currentDocument = useDocumentStore((s) => s.currentDocument);
   const currentFilePath = useDocumentStore((s) => s.currentFilePath);
   const isDirty = useDocumentStore((s) => s.isDirty);
@@ -140,7 +138,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
   return (
     <div className="flex h-screen flex-col bg-bg text-fg">
       <div className="flex min-h-0 flex-1">
-        <Sidebar activeId={activeFeature} onSelect={setActiveFeature} />
+        <Sidebar />
         <main className="min-w-0 flex-1 overflow-auto bg-bg">{children}</main>
       </div>
       <StatusBar />

@@ -2,75 +2,89 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ServiceNow brand palette
+ *   Infinite Blue  #032D42  — primary dark anchor / dark-mode bg
+ *   Wasabi Green   #63DF4E  — accent
+ *   Bright Blue    #52B8FF
+ *   Bright Indigo  #7661FF
+ *   Bright Purple  #BF71F2
+ */
+
 :root {
   --bg: #ffffff;
-  --bg-elevated: #f7f7f8;
-  --bg-sunken: #f0f0f2;
+  --bg-elevated: #f6f9fa;
+  --bg-sunken: #ecf1f3;
 
-  --fg: #111114;
-  --fg-muted: #4b4f57;
-  --fg-subtle: #7a7f88;
+  --fg: #032d42; /* Infinite Blue */
+  --fg-muted: #3c5566;
+  --fg-subtle: #6c8290;
 
-  --border: #e3e5e9;
-  --border-strong: #c8ccd2;
+  --border: #d7e0e5;
+  --border-strong: #b4c2cb;
 
-  --accent: #2563eb;
-  --accent-fg: #ffffff;
+  --accent: #63df4e; /* Wasabi Green */
+  --accent-fg: #032d42; /* Infinite Blue on green */
+  --brand: #032d42;
+  --brand-fg: #ffffff;
 
-  --status-not-licensed: #9ca3af;
-  --status-no-intent: #64748b;
+  --status-not-licensed: #94a3a6;
+  --status-no-intent: #5c7378;
   --status-not-in-use: #d97706;
-  --status-planning: #2563eb;
-  --status-implementing: #7c3aed;
-  --status-in-use: #059669;
+  --status-planning: #52b8ff; /* Bright Blue */
+  --status-implementing: #7661ff; /* Bright Indigo */
+  --status-in-use: #63df4e; /* Wasabi Green */
 }
 
 :root[data-theme='dark'],
 :root.dark {
-  --bg: #0b0b0e;
-  --bg-elevated: #14141a;
-  --bg-sunken: #07070a;
+  --bg: #032d42; /* Infinite Blue */
+  --bg-elevated: #0a4359;
+  --bg-sunken: #021f30;
 
-  --fg: #f5f5f7;
-  --fg-muted: #a1a1aa;
-  --fg-subtle: #6b6b74;
+  --fg: #ffffff;
+  --fg-muted: #b8c7d2;
+  --fg-subtle: #7d92a0;
 
-  --border: #232329;
-  --border-strong: #34343c;
+  --border: #14495e;
+  --border-strong: #266079;
 
-  --accent: #3b82f6;
-  --accent-fg: #ffffff;
+  --accent: #63df4e;
+  --accent-fg: #032d42;
+  --brand: #63df4e;
+  --brand-fg: #032d42;
 
-  --status-not-licensed: #6b7280;
-  --status-no-intent: #475569;
+  --status-not-licensed: #6b8293;
+  --status-no-intent: #4a6377;
   --status-not-in-use: #f59e0b;
-  --status-planning: #3b82f6;
-  --status-implementing: #8b5cf6;
-  --status-in-use: #10b981;
+  --status-planning: #52b8ff;
+  --status-implementing: #7661ff;
+  --status-in-use: #63df4e;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --bg: #0b0b0e;
-    --bg-elevated: #14141a;
-    --bg-sunken: #07070a;
+    --bg: #032d42;
+    --bg-elevated: #0a4359;
+    --bg-sunken: #021f30;
 
-    --fg: #f5f5f7;
-    --fg-muted: #a1a1aa;
-    --fg-subtle: #6b6b74;
+    --fg: #ffffff;
+    --fg-muted: #b8c7d2;
+    --fg-subtle: #7d92a0;
 
-    --border: #232329;
-    --border-strong: #34343c;
+    --border: #14495e;
+    --border-strong: #266079;
 
-    --accent: #3b82f6;
-    --accent-fg: #ffffff;
+    --accent: #63df4e;
+    --accent-fg: #032d42;
+    --brand: #63df4e;
+    --brand-fg: #032d42;
 
-    --status-not-licensed: #6b7280;
-    --status-no-intent: #475569;
+    --status-not-licensed: #6b8293;
+    --status-no-intent: #4a6377;
     --status-not-in-use: #f59e0b;
-    --status-planning: #3b82f6;
-    --status-implementing: #8b5cf6;
-    --status-in-use: #10b981;
+    --status-planning: #52b8ff;
+    --status-implementing: #7661ff;
+    --status-in-use: #63df4e;
   }
 }
 
@@ -79,8 +93,15 @@ body {
   height: 100%;
   background-color: var(--bg);
   color: var(--fg);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', system-ui, sans-serif;
-  font-size: 13px;
+  font-family:
+    'ServiceNow Sans',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Inter',
+    system-ui,
+    sans-serif;
+  font-size: 15px;
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
 }
