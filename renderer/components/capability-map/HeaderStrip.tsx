@@ -2,6 +2,8 @@
 
 import { Search } from 'lucide-react';
 import type { CapabilityStatus } from '../../../shared/file-format';
+import { STATUSES } from '../../lib/capability-status';
+import { StatusFilterChips } from './StatusFilterChips';
 
 interface Props {
   customerName: string;
@@ -27,61 +29,103 @@ export function HeaderStrip({
   onSearchChange,
   viewMode,
   onViewModeChange,
+  statusSummary,
+  statusFilter,
+  onToggleStatusFilter,
+  onClearStatusFilter,
 }: Props) {
   return (
-    <div className="flex flex-wrap items-center gap-3 border-b border-border bg-bg-elevated px-4 py-2">
-      <label className="flex items-center gap-2">
-        <span className="text-xs font-medium uppercase tracking-wide text-fg-subtle">Customer</span>
-        <input
-          type="text"
-          value={customerName}
-          onChange={(e) => onCustomerNameChange(e.target.value)}
-          placeholder="Untitled"
-          className="h-7 w-56 rounded-sm border border-border bg-bg px-2 text-sm text-fg placeholder:text-fg-subtle focus:border-accent focus:outline-none"
-        />
-      </label>
-
-      <div className="text-xs text-fg-muted" aria-live="polite">
-        Categories: <span className="font-medium text-fg">{enabledCount}</span> of{' '}
-        <span className="font-medium text-fg">{totalCount}</span> enabled
-      </div>
-
-      <div className="ml-auto flex items-center gap-3">
-        <label className="relative flex items-center">
-          <Search size={13} className="pointer-events-none absolute left-2 text-fg-subtle" />
+    <div className="flex flex-col gap-2 border-b border-border bg-bg-elevated px-4 py-2">
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="flex items-center gap-2">
+          <span className="text-xs font-medium uppercase tracking-wide text-fg-subtle">
+            Customer
+          </span>
           <input
-            type="search"
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search capabilities…"
-            aria-label="Search capabilities"
-            className="h-7 w-56 rounded-sm border border-border bg-bg pl-7 pr-2 text-sm text-fg placeholder:text-fg-subtle focus:border-accent focus:outline-none"
+            type="text"
+            value={customerName}
+            onChange={(e) => onCustomerNameChange(e.target.value)}
+            placeholder="Untitled"
+            className="h-7 w-56 rounded-sm border border-border bg-bg px-2 text-sm text-fg placeholder:text-fg-subtle focus:border-accent focus:outline-none"
           />
         </label>
 
-        <div
-          role="group"
-          aria-label="View mode"
-          className="inline-flex overflow-hidden rounded-sm border border-border"
-        >
-          {(['grid', 'list'] as const).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              onClick={() => onViewModeChange(mode)}
-              aria-pressed={viewMode === mode}
-              className={[
-                'h-7 px-2.5 text-xs capitalize',
-                viewMode === mode
-                  ? 'bg-accent text-accent-fg'
-                  : 'bg-bg text-fg-muted hover:bg-bg-sunken hover:text-fg',
-              ].join(' ')}
-            >
-              {mode}
-            </button>
-          ))}
+        <div className="text-xs text-fg-muted" aria-live="polite">
+          Categories: <span className="font-medium text-fg">{enabledCount}</span> of{' '}
+          <span className="font-medium text-fg">{totalCount}</span> enabled
+        </div>
+
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-fg-muted">
+          {STATUSES.map((s, idx) => {
+            const active = statusFilter.has(s.id);
+            return (
+              <span key={s.id} className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => onToggleStatusFilter(s.id)}
+                  aria-pressed={active}
+                  className={[
+                    'flex items-center gap-1 rounded-sm px-1 py-0.5 hover:bg-bg-sunken',
+                    active ? 'bg-bg-sunken text-fg' : '',
+                  ].join(' ')}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="h-2 w-2 rounded-sm"
+                    style={{ backgroundColor: s.color }}
+                  />
+                  <span>{s.label}:</span>
+                  <span className="font-medium text-fg">{statusSummary[s.id]}</span>
+                </button>
+                {idx < STATUSES.length - 1 && <span aria-hidden="true">·</span>}
+              </span>
+            );
+          })}
+        </div>
+
+        <div className="ml-auto flex items-center gap-3">
+          <label className="relative flex items-center">
+            <Search size={13} className="pointer-events-none absolute left-2 text-fg-subtle" />
+            <input
+              type="search"
+              value={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder="Search capabilities…"
+              aria-label="Search capabilities"
+              className="h-7 w-56 rounded-sm border border-border bg-bg pl-7 pr-2 text-sm text-fg placeholder:text-fg-subtle focus:border-accent focus:outline-none"
+            />
+          </label>
+
+          <div
+            role="group"
+            aria-label="View mode"
+            className="inline-flex overflow-hidden rounded-sm border border-border"
+          >
+            {(['grid', 'list'] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => onViewModeChange(mode)}
+                aria-pressed={viewMode === mode}
+                className={[
+                  'h-7 px-2.5 text-xs capitalize',
+                  viewMode === mode
+                    ? 'bg-accent text-accent-fg'
+                    : 'bg-bg text-fg-muted hover:bg-bg-sunken hover:text-fg',
+                ].join(' ')}
+              >
+                {mode}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
+
+      <StatusFilterChips
+        filter={statusFilter}
+        onToggle={onToggleStatusFilter}
+        onClear={onClearStatusFilter}
+      />
     </div>
   );
 }
