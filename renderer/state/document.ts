@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { emptyDocument, type Document } from '../../shared/file-format';
+import { emptyDocument, type CapabilityStatus, type Document } from '../../shared/file-format';
 
 export interface DocumentState {
   currentDocument: Document | null;
@@ -11,6 +11,13 @@ export interface DocumentState {
   updateDocument: (mutator: (draft: Document) => Document) => void;
   setCustomerName: (name: string) => void;
   setCategoryEnabled: (categoryId: string, enabled: boolean) => void;
+  setCapabilityStatus: (capabilityId: string, status: CapabilityStatus) => void;
+  setCapabilityNotes: (capabilityId: string, notes: string) => void;
+  setCategoryCapabilityStatuses: (
+    capabilityIds: readonly string[],
+    status: CapabilityStatus,
+  ) => void;
+  clearCategoryCapabilityNotes: (capabilityIds: readonly string[]) => void;
   markDirty: () => void;
   markClean: (savedAt?: number) => void;
   setFilePath: (path: string | null) => void;
@@ -62,6 +69,90 @@ export const useDocumentStore = create<DocumentState>((set) => ({
               [categoryId]: enabled,
             },
           },
+        },
+        isDirty: true,
+      };
+    }),
+
+  setCapabilityStatus: (capabilityId, status) =>
+    set((state) => {
+      const base = state.currentDocument ?? emptyDocument();
+      const current = base.capabilityMap.capabilityStatus[capabilityId];
+      if (current === status) return state;
+      return {
+        currentDocument: {
+          ...base,
+          capabilityMap: {
+            ...base.capabilityMap,
+            capabilityStatus: {
+              ...base.capabilityMap.capabilityStatus,
+              [capabilityId]: status,
+            },
+          },
+        },
+        isDirty: true,
+      };
+    }),
+
+  setCapabilityNotes: (capabilityId, notes) =>
+    set((state) => {
+      const base = state.currentDocument ?? emptyDocument();
+      const current = base.capabilityMap.capabilityNotes[capabilityId] ?? '';
+      if (current === notes) return state;
+      const nextNotes = { ...base.capabilityMap.capabilityNotes };
+      if (notes === '') {
+        delete nextNotes[capabilityId];
+      } else {
+        nextNotes[capabilityId] = notes;
+      }
+      return {
+        currentDocument: {
+          ...base,
+          capabilityMap: { ...base.capabilityMap, capabilityNotes: nextNotes },
+        },
+        isDirty: true,
+      };
+    }),
+
+  setCategoryCapabilityStatuses: (capabilityIds, status) =>
+    set((state) => {
+      if (capabilityIds.length === 0) return state;
+      const base = state.currentDocument ?? emptyDocument();
+      const nextStatus = { ...base.capabilityMap.capabilityStatus };
+      let changed = false;
+      for (const id of capabilityIds) {
+        if (nextStatus[id] !== status) {
+          nextStatus[id] = status;
+          changed = true;
+        }
+      }
+      if (!changed) return state;
+      return {
+        currentDocument: {
+          ...base,
+          capabilityMap: { ...base.capabilityMap, capabilityStatus: nextStatus },
+        },
+        isDirty: true,
+      };
+    }),
+
+  clearCategoryCapabilityNotes: (capabilityIds) =>
+    set((state) => {
+      if (capabilityIds.length === 0) return state;
+      const base = state.currentDocument ?? emptyDocument();
+      const nextNotes = { ...base.capabilityMap.capabilityNotes };
+      let changed = false;
+      for (const id of capabilityIds) {
+        if (id in nextNotes) {
+          delete nextNotes[id];
+          changed = true;
+        }
+      }
+      if (!changed) return state;
+      return {
+        currentDocument: {
+          ...base,
+          capabilityMap: { ...base.capabilityMap, capabilityNotes: nextNotes },
         },
         isDirty: true,
       };
