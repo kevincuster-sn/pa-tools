@@ -1,0 +1,49 @@
+import { create } from 'zustand';
+import { emptyDocument, type Document } from '../../shared/file-format';
+
+export interface DocumentState {
+  currentDocument: Document | null;
+  currentFilePath: string | null;
+  isDirty: boolean;
+  lastSavedAt: number | null;
+
+  loadDocument: (doc: Document | null, path: string | null) => void;
+  updateDocument: (mutator: (draft: Document) => Document) => void;
+  markDirty: () => void;
+  markClean: (savedAt?: number) => void;
+  setFilePath: (path: string | null) => void;
+}
+
+export const useDocumentStore = create<DocumentState>((set) => ({
+  currentDocument: null,
+  currentFilePath: null,
+  isDirty: false,
+  lastSavedAt: null,
+
+  loadDocument: (doc, path) =>
+    set({
+      currentDocument: doc,
+      currentFilePath: path,
+      isDirty: false,
+      lastSavedAt: null,
+    }),
+
+  updateDocument: (mutator) =>
+    set((state) => {
+      const base = state.currentDocument ?? emptyDocument();
+      const next = mutator(base);
+      return { currentDocument: next, isDirty: true };
+    }),
+
+  markDirty: () => set({ isDirty: true }),
+
+  markClean: (savedAt) => set({ isDirty: false, lastSavedAt: savedAt ?? Date.now() }),
+
+  setFilePath: (path) => set({ currentFilePath: path }),
+}));
+
+export function fileNameFromPath(path: string | null): string {
+  if (!path) return 'Untitled';
+  const parts = path.split(/[\\/]/);
+  return parts[parts.length - 1] || 'Untitled';
+}

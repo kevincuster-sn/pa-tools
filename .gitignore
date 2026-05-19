@@ -8,3 +8,6 @@ dist-electron
 .env
 .env.local
 coverage
+
+# Raw extractor inputs; cleaned seed JSON is committed under renderer/data/.
+seed-sources/*.pptx

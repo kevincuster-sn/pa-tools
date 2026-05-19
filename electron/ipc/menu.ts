@@ -1,13 +1,27 @@
 import { BrowserWindow, Menu, MenuItemConstructorOptions } from 'electron';
 import { IPC_CHANNELS } from '../../shared/api';
 
-export function buildAppMenu(getWindow: () => BrowserWindow | null): void {
-  const send = (action: string) => {
-    const win = getWindow();
-    if (win) win.webContents.send(IPC_CHANNELS.menuAction, action);
+export interface MenuOptions {
+  getWindow: () => BrowserWindow | null;
+  getRecentFiles: () => string[];
+}
+
+export function buildAppMenu(opts: MenuOptions): void {
+  const send = (action: string, payload?: unknown) => {
+    const win = opts.getWindow();
+    if (win) win.webContents.send(IPC_CHANNELS.menuAction, action, payload);
   };
 
   const isMac = process.platform === 'darwin';
+  const recent = opts.getRecentFiles();
+
+  const recentSubmenu: MenuItemConstructorOptions[] =
+    recent.length === 0
+      ? [{ label: 'No Recent Files', enabled: false }]
+      : recent.map((p) => ({
+          label: p,
+          click: () => send('file:openRecent', p),
+        }));
 
   const template: MenuItemConstructorOptions[] = [
     ...(isMac
@@ -32,10 +46,20 @@ export function buildAppMenu(getWindow: () => BrowserWindow | null): void {
       label: 'File',
       submenu: [
         {
+          label: 'New',
+          accelerator: 'CmdOrCtrl+N',
+          click: () => send('file:new'),
+        },
+        {
           label: 'Open…',
           accelerator: 'CmdOrCtrl+O',
           click: () => send('file:open'),
         },
+        {
+          label: 'Open Recent',
+          submenu: recentSubmenu,
+        },
+        { type: 'separator' },
         {
           label: 'Save',
           accelerator: 'CmdOrCtrl+S',
@@ -47,12 +71,24 @@ export function buildAppMenu(getWindow: () => BrowserWindow | null): void {
           click: () => send('file:saveAs'),
         },
         { type: 'separator' },
-        isMac ? { role: 'close' } : { role: 'quit' },
+        {
+          label: 'Close',
+          accelerator: 'CmdOrCtrl+W',
+          click: () => send('file:close'),
+        },
       ],
     },
     { role: 'editMenu' },
     { role: 'viewMenu' },
-    { role: 'windowMenu' },
+    {
+      role: 'help',
+      submenu: [
+        {
+          label: 'About PA Tools',
+          click: () => send('help:about'),
+        },
+      ],
+    },
   ];
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
