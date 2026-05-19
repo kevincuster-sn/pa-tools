@@ -1,27 +1,37 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { emptyDocument } from '../../../shared/file-format';
+import type { CapabilityStatus } from '../../../shared/file-format';
 import { useDocumentStore } from '../../state/document';
 import { groupedSeed, isCategoryEnabled, seed } from '../../lib/capability-map';
+import { countCapabilitiesByStatus, getCapabilityStatus } from '../../lib/capability-status';
 import { AiNativeSection } from './AiNativeSection';
 import { CategoryCard } from './CategoryCard';
 import { HeaderStrip } from './HeaderStrip';
+import { StatusPopover } from './StatusPopover';
 
 export function CapabilityMapView() {
   const currentDocument = useDocumentStore((s) => s.currentDocument);
   const setCustomerName = useDocumentStore((s) => s.setCustomerName);
   const setCategoryEnabled = useDocumentStore((s) => s.setCategoryEnabled);
+  const setCapabilityStatus = useDocumentStore((s) => s.setCapabilityStatus);
+  const setCapabilityNotes = useDocumentStore((s) => s.setCapabilityNotes);
   const loadDocument = useDocumentStore((s) => s.loadDocument);
+  // setCategoryCapabilityStatuses and clearCategoryCapabilityNotes are wired in Task 8.
 
   const [searchTermRaw, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [statusFilter, setStatusFilter] = useState<ReadonlySet<CapabilityStatus>>(new Set());
+  const [popover, setPopover] = useState<{ id: string; anchor: HTMLElement } | null>(null);
 
   const searchTerm = searchTermRaw.trim().toLowerCase();
 
   const doc = currentDocument ?? emptyDocument();
   const customerName = doc.customer.name;
   const categoryEnabled = doc.capabilityMap.categoryEnabled;
+  const capabilityStatus = doc.capabilityMap.capabilityStatus;
+  const capabilityNotes = doc.capabilityMap.capabilityNotes;
 
   const solutionCategories = groupedSeed.solutionCategories;
 
@@ -32,6 +42,28 @@ export function CapabilityMapView() {
     }
     return { enabledCount: enabled, totalCount: solutionCategories.length };
   }, [solutionCategories, categoryEnabled]);
+
+  const summary = useMemo(() => {
+    const allIds = seed.capabilities.map((c) => c.id);
+    return countCapabilitiesByStatus(allIds, capabilityStatus);
+  }, [capabilityStatus]);
+
+  const toggleStatusFilter = useCallback((status: CapabilityStatus) => {
+    setStatusFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(status)) next.delete(status);
+      else next.add(status);
+      return next;
+    });
+  }, []);
+
+  const clearStatusFilter = useCallback(() => setStatusFilter(new Set()), []);
+
+  const handlePillClick = useCallback((capabilityId: string, anchor: HTMLElement) => {
+    setPopover((prev) => (prev?.id === capabilityId ? null : { id: capabilityId, anchor }));
+  }, []);
+
+  const closePopover = useCallback(() => setPopover(null), []);
 
   if (!seed || solutionCategories.length === 0) {
     return (
@@ -51,6 +83,10 @@ export function CapabilityMapView() {
     );
   }
 
+  const selectedCapability = popover
+    ? (seed.capabilities.find((c) => c.id === popover.id) ?? null)
+    : null;
+
   return (
     <div className="flex h-full flex-col">
       <HeaderStrip
@@ -62,6 +98,10 @@ export function CapabilityMapView() {
         onSearchChange={setSearchTerm}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
+        statusSummary={summary}
+        statusFilter={statusFilter}
+        onToggleStatusFilter={toggleStatusFilter}
+        onClearStatusFilter={clearStatusFilter}
       />
 
       <div className="min-h-0 flex-1 overflow-auto">
@@ -86,16 +126,40 @@ export function CapabilityMapView() {
                     capabilities={capabilities}
                     enabled={enabled}
                     searchTerm={searchTerm}
+                    statusFilter={statusFilter}
+                    capabilityStatus={capabilityStatus}
+                    capabilityNotes={capabilityNotes}
+                    selectedCapabilityId={popover?.id ?? null}
                     onToggle={(next) => setCategoryEnabled(cat.id, next)}
+                    onPillClick={handlePillClick}
                   />
                 );
               })}
             </div>
 
-            <AiNativeSection searchTerm={searchTerm} />
+            <AiNativeSection
+              searchTerm={searchTerm}
+              statusFilter={statusFilter}
+              capabilityStatus={capabilityStatus}
+              capabilityNotes={capabilityNotes}
+              selectedCapabilityId={popover?.id ?? null}
+              onPillClick={handlePillClick}
+            />
           </div>
         )}
       </div>
+
+      {popover && selectedCapability && (
+        <StatusPopover
+          anchor={popover.anchor}
+          capabilityName={selectedCapability.name}
+          status={getCapabilityStatus(capabilityStatus, popover.id)}
+          notes={capabilityNotes[popover.id] ?? ''}
+          onStatusChange={(next) => setCapabilityStatus(popover.id, next)}
+          onNotesChange={(next) => setCapabilityNotes(popover.id, next)}
+          onClose={closePopover}
+        />
+      )}
     </div>
   );
 }

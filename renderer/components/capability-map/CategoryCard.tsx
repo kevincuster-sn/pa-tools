@@ -2,7 +2,9 @@
 
 import { memo, useMemo } from 'react';
 import type { Capability, Category } from '../../data/types';
+import type { CapabilityStatus } from '../../../shared/file-format';
 import { matchesSearch } from '../../lib/capability-map';
+import { getCapabilityStatus } from '../../lib/capability-status';
 import { CapabilityPill } from './CapabilityPill';
 import { ToggleSwitch } from './ToggleSwitch';
 
@@ -11,16 +13,40 @@ interface Props {
   capabilities: Capability[];
   enabled: boolean;
   searchTerm: string;
+  statusFilter: ReadonlySet<CapabilityStatus>;
+  capabilityStatus: Record<string, CapabilityStatus>;
+  capabilityNotes: Record<string, string>;
+  selectedCapabilityId: string | null;
   onToggle: (next: boolean) => void;
+  onPillClick: (capabilityId: string, anchor: HTMLElement) => void;
 }
 
-function CategoryCardImpl({ category, capabilities, enabled, searchTerm, onToggle }: Props) {
+function CategoryCardImpl({
+  category,
+  capabilities,
+  enabled,
+  searchTerm,
+  statusFilter,
+  capabilityStatus,
+  capabilityNotes,
+  selectedCapabilityId,
+  onToggle,
+  onPillClick,
+}: Props) {
   const visibleCapabilities = useMemo(() => {
-    if (!searchTerm) return capabilities;
-    return capabilities.filter((c) => matchesSearch(c.name, searchTerm));
-  }, [capabilities, searchTerm]);
+    return capabilities.filter((c) => {
+      if (searchTerm && !matchesSearch(c.name, searchTerm)) return false;
+      if (statusFilter.size > 0 && !statusFilter.has(getCapabilityStatus(capabilityStatus, c.id))) {
+        return false;
+      }
+      return true;
+    });
+  }, [capabilities, searchTerm, statusFilter, capabilityStatus]);
 
-  const filteredOut = searchTerm && visibleCapabilities.length === 0;
+  const filteredOut =
+    (searchTerm || statusFilter.size > 0) &&
+    visibleCapabilities.length === 0 &&
+    capabilities.length > 0;
 
   return (
     <section
@@ -53,7 +79,15 @@ function CategoryCardImpl({ category, capabilities, enabled, searchTerm, onToggl
           </div>
         )}
         {visibleCapabilities.map((cap) => (
-          <CapabilityPill key={cap.id} capability={cap} disabled={!enabled} />
+          <CapabilityPill
+            key={cap.id}
+            capability={cap}
+            status={getCapabilityStatus(capabilityStatus, cap.id)}
+            hasNotes={Boolean(capabilityNotes[cap.id])}
+            disabled={!enabled}
+            selected={selectedCapabilityId === cap.id}
+            onClick={onPillClick}
+          />
         ))}
       </div>
     </section>

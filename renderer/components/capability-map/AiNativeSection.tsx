@@ -1,32 +1,53 @@
 'use client';
 
 import { memo, useMemo } from 'react';
+import type { CapabilityStatus } from '../../../shared/file-format';
 import { AI_NATIVE_PILLAR_LABELS, groupedSeed, matchesSearch } from '../../lib/capability-map';
+import { getCapabilityStatus } from '../../lib/capability-status';
 import { CapabilityPill } from './CapabilityPill';
 
 interface Props {
   searchTerm: string;
+  statusFilter: ReadonlySet<CapabilityStatus>;
+  capabilityStatus: Record<string, CapabilityStatus>;
+  capabilityNotes: Record<string, string>;
+  selectedCapabilityId: string | null;
+  onPillClick: (capabilityId: string, anchor: HTMLElement) => void;
 }
 
-function AiNativeSectionImpl({ searchTerm }: Props) {
+function AiNativeSectionImpl({
+  searchTerm,
+  statusFilter,
+  capabilityStatus,
+  capabilityNotes,
+  selectedCapabilityId,
+  onPillClick,
+}: Props) {
+  const filterCap = (id: string, name: string) => {
+    if (searchTerm && !matchesSearch(name, searchTerm)) return false;
+    if (statusFilter.size > 0 && !statusFilter.has(getCapabilityStatus(capabilityStatus, id))) {
+      return false;
+    }
+    return true;
+  };
+
   const aiControlTower = useMemo(
-    () =>
-      searchTerm
-        ? groupedSeed.aiControlTower.capabilities.filter((c) => matchesSearch(c.name, searchTerm))
-        : groupedSeed.aiControlTower.capabilities,
-    [searchTerm],
+    () => groupedSeed.aiControlTower.capabilities.filter((c) => filterCap(c.id, c.name)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [searchTerm, statusFilter, capabilityStatus],
   );
 
   const pillars = useMemo(
     () =>
       groupedSeed.pillars.map((p) => ({
         ...p,
-        visibleCapabilities: searchTerm
-          ? p.capabilities.filter((c) => matchesSearch(c.name, searchTerm))
-          : p.capabilities,
+        visibleCapabilities: p.capabilities.filter((c) => filterCap(c.id, c.name)),
       })),
-    [searchTerm],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [searchTerm, statusFilter, capabilityStatus],
   );
+
+  const showEmptyHint = searchTerm || statusFilter.size > 0;
 
   return (
     <section
@@ -53,11 +74,19 @@ function AiNativeSectionImpl({ searchTerm }: Props) {
             aria-label="AI Control Tower capabilities"
             className="grid grid-cols-2 gap-1 p-2 sm:grid-cols-3 md:grid-cols-4"
           >
-            {aiControlTower.length === 0 && searchTerm && (
+            {aiControlTower.length === 0 && showEmptyHint && (
               <div className="col-span-full px-1 text-xs italic text-fg-subtle">No matches</div>
             )}
             {aiControlTower.map((cap) => (
-              <CapabilityPill key={cap.id} capability={cap} disabled={false} />
+              <CapabilityPill
+                key={cap.id}
+                capability={cap}
+                status={getCapabilityStatus(capabilityStatus, cap.id)}
+                hasNotes={Boolean(capabilityNotes[cap.id])}
+                disabled={false}
+                selected={selectedCapabilityId === cap.id}
+                onClick={onPillClick}
+              />
             ))}
           </div>
         </div>
@@ -83,11 +112,19 @@ function AiNativeSectionImpl({ searchTerm }: Props) {
             >
               {visibleCapabilities.length === 0 && (
                 <div className="px-1 py-0.5 text-xs italic text-fg-subtle">
-                  {searchTerm ? 'No matches' : 'No capabilities'}
+                  {showEmptyHint ? 'No matches' : 'No capabilities'}
                 </div>
               )}
               {visibleCapabilities.map((cap) => (
-                <CapabilityPill key={cap.id} capability={cap} disabled={false} />
+                <CapabilityPill
+                  key={cap.id}
+                  capability={cap}
+                  status={getCapabilityStatus(capabilityStatus, cap.id)}
+                  hasNotes={Boolean(capabilityNotes[cap.id])}
+                  disabled={false}
+                  selected={selectedCapabilityId === cap.id}
+                  onClick={onPillClick}
+                />
               ))}
             </div>
           </div>

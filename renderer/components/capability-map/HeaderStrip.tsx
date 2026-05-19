@@ -1,6 +1,7 @@
 'use client';
 
 import { Search } from 'lucide-react';
+import type { CapabilityStatus } from '../../../shared/file-format';
 
 interface Props {
   customerName: string;
@@ -11,6 +12,10 @@ interface Props {
   onSearchChange: (next: string) => void;
   viewMode: 'grid' | 'list';
   onViewModeChange: (next: 'grid' | 'list') => void;
+  statusSummary: Record<CapabilityStatus, number>;
+  statusFilter: ReadonlySet<CapabilityStatus>;
+  onToggleStatusFilter: (status: CapabilityStatus) => void;
+  onClearStatusFilter: () => void;
 }
 
 export function HeaderStrip({
