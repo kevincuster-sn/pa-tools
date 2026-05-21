@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { emptyDocument } from '../../shared/file-format';
 import type { FileIoError, OpenFileResult, SaveFileResult } from '../../shared/api';
 import { fileNameFromPath, useDocumentStore } from '../state/document';
@@ -85,55 +85,69 @@ export function AppShell({ children }: { children?: ReactNode }) {
     [loadDocument],
   );
 
+  // IPC handlers must be registered exactly once for the lifetime of the
+  // component, otherwise ipcRenderer.on accumulates listeners and each menu
+  // action / close request fires N times — including stale-closure variants
+  // that overwrite the live document with whatever was in scope at first
+  // registration. Refs let the single registered listener always read the
+  // latest callbacks.
+  const handlersRef = useRef({ confirmIfDirty, doSave, doSaveAs, handleOpenResult, loadDocument });
+  useEffect(() => {
+    handlersRef.current = { confirmIfDirty, doSave, doSaveAs, handleOpenResult, loadDocument };
+  });
+
   useEffect(() => {
     if (!window.api) return;
-    window.api.onMenuAction(async (action, payload) => {
+    const off = window.api.onMenuAction(async (action, payload) => {
+      const h = handlersRef.current;
       switch (action) {
         case 'file:new': {
-          const ok = await confirmIfDirty();
-          if (ok) loadDocument(emptyDocument(), null);
+          const ok = await h.confirmIfDirty();
+          if (ok) h.loadDocument(emptyDocument(), null);
           break;
         }
         case 'file:open': {
-          const ok = await confirmIfDirty();
+          const ok = await h.confirmIfDirty();
           if (!ok) return;
-          handleOpenResult(await window.api.openFile());
+          h.handleOpenResult(await window.api.openFile());
           break;
         }
         case 'file:openRecent': {
-          const ok = await confirmIfDirty();
+          const ok = await h.confirmIfDirty();
           if (!ok) return;
           if (typeof payload === 'string') {
-            handleOpenResult(await window.api.openFileByPath(payload));
+            h.handleOpenResult(await window.api.openFileByPath(payload));
           }
           break;
         }
         case 'file:save': {
-          await doSave();
+          await h.doSave();
           break;
         }
         case 'file:saveAs': {
-          await doSaveAs();
+          await h.doSaveAs();
           break;
         }
         case 'file:close': {
-          const ok = await confirmIfDirty();
-          if (ok) loadDocument(null, null);
+          const ok = await h.confirmIfDirty();
+          if (ok) h.loadDocument(null, null);
           break;
         }
         default:
           break;
       }
     });
-  }, [confirmIfDirty, doSave, doSaveAs, handleOpenResult, loadDocument]);
+    return off;
+  }, []);
 
   useEffect(() => {
     if (!window.api) return;
-    window.api.onRequestCloseConfirm(async () => {
-      const ok = await confirmIfDirty();
+    const off = window.api.onRequestCloseConfirm(async () => {
+      const ok = await handlersRef.current.confirmIfDirty();
       window.api.confirmCloseResponse(ok);
     });
-  }, [confirmIfDirty]);
+    return off;
+  }, []);
 
   return (
     <div className="flex h-screen flex-col bg-bg text-fg">

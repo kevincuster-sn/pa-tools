@@ -38,8 +38,8 @@ export interface PaToolsApi {
   getRecentFiles(): Promise<string[]>;
   confirmUnsavedChanges(payload: ConfirmUnsavedPayload): Promise<UnsavedChoice>;
   setDirtyState(isDirty: boolean): void;
-  onMenuAction(handler: MenuActionHandler): void;
-  onRequestCloseConfirm(handler: () => void): void;
+  onMenuAction(handler: MenuActionHandler): () => void;
+  onRequestCloseConfirm(handler: () => void): () => void;
   confirmCloseResponse(allow: boolean): void;
 }
 
