@@ -52,11 +52,19 @@ export function CapabilityMapView() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [statusFilter, setStatusFilter] = useState<ReadonlySet<CapabilityStatus>>(new Set());
   const [popover, setPopover] = useState<{ id: string; anchor: HTMLElement } | null>(null);
+  const [leavingIds, setLeavingIds] = useState<ReadonlySet<string>>(new Set());
+  const [toast, setToast] = useState<string | null>(null);
   // dnd-kit assigns aria-describedby ids from a global counter that differs
   // between SSR and client; defer mounting the DndContext until after hydration.
   const [dndMounted, setDndMounted] = useState(false);
   // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot hydration guard
   useEffect(() => setDndMounted(true), []);
+
+  useEffect(() => {
+    if (!toast) return;
+    const id = window.setTimeout(() => setToast(null), 1600);
+    return () => window.clearTimeout(id);
+  }, [toast]);
 
   const searchTerm = searchTermRaw.trim().toLowerCase();
 
@@ -68,16 +76,13 @@ export function CapabilityMapView() {
 
   const solutionCategories = groupedSeed.solutionCategories;
 
-  const { active: activeCategories, unlicensed: unlicensedCategories } = useMemo(
+  const { active: activeCategories, inactive: inactiveCategories } = useMemo(
     () => partitionCategories(solutionCategories, doc.capabilityMap),
     [solutionCategories, doc.capabilityMap],
   );
 
   const activeIds = useMemo(() => activeCategories.map((c) => c.id), [activeCategories]);
-  const unlicensedIds = useMemo(
-    () => unlicensedCategories.map((c) => c.id),
-    [unlicensedCategories],
-  );
+  const inactiveIds = useMemo(() => inactiveCategories.map((c) => c.id), [inactiveCategories]);
 
   const { enabledCount, totalCount } = useMemo(() => {
     let enabled = 0;
@@ -114,6 +119,31 @@ export function CapabilityMapView() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
+  const handleCategoryToggle = useCallback(
+    (catId: string, catName: string, next: boolean) => {
+      if (next) {
+        setCategoryEnabled(catId, true);
+        return;
+      }
+      setLeavingIds((prev) => {
+        const out = new Set(prev);
+        out.add(catId);
+        return out;
+      });
+      window.setTimeout(() => {
+        setCategoryEnabled(catId, false);
+        setLeavingIds((prev) => {
+          if (!prev.has(catId)) return prev;
+          const out = new Set(prev);
+          out.delete(catId);
+          return out;
+        });
+        setToast(`${catName} moved to Inactive`);
+      }, 220);
+    },
+    [setCategoryEnabled],
+  );
+
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
@@ -121,27 +151,27 @@ export function CapabilityMapView() {
       const activeId = String(active.id);
       const overId = String(over.id);
       const inActive = activeIds.includes(activeId);
-      const inUnlicensed = unlicensedIds.includes(activeId);
+      const inInactive = inactiveIds.includes(activeId);
       const overInActive = activeIds.includes(overId);
-      const overInUnlicensed = unlicensedIds.includes(overId);
+      const overInInactive = inactiveIds.includes(overId);
 
       let newActive = activeIds;
-      let newUnlicensed = unlicensedIds;
+      let newInactive = inactiveIds;
       if (inActive && overInActive) {
         const from = activeIds.indexOf(activeId);
         const to = activeIds.indexOf(overId);
         newActive = arrayMove(activeIds, from, to);
-      } else if (inUnlicensed && overInUnlicensed) {
-        const from = unlicensedIds.indexOf(activeId);
-        const to = unlicensedIds.indexOf(overId);
-        newUnlicensed = arrayMove(unlicensedIds, from, to);
+      } else if (inInactive && overInInactive) {
+        const from = inactiveIds.indexOf(activeId);
+        const to = inactiveIds.indexOf(overId);
+        newInactive = arrayMove(inactiveIds, from, to);
       } else {
         return; // cross-section drag — ignore
       }
 
-      setCategoryOrder([...newActive, ...newUnlicensed]);
+      setCategoryOrder([...newActive, ...newInactive]);
     },
-    [activeIds, unlicensedIds, setCategoryOrder],
+    [activeIds, inactiveIds, setCategoryOrder],
   );
 
   if (!seed || solutionCategories.length === 0) {
@@ -170,18 +200,20 @@ export function CapabilityMapView() {
     const enabled = isCategoryEnabled(categoryEnabled, cat.id);
     const capabilities = groupedSeed.capabilitiesByCategory.get(cat.id) ?? [];
     const Card = dndMounted ? SortableCategoryCard : CategoryCard;
+    const isLeaving = leavingIds.has(cat.id);
     return (
       <Card
         key={cat.id}
         category={cat}
         capabilities={capabilities}
         enabled={enabled}
+        isLeaving={isLeaving}
         searchTerm={searchTerm}
         statusFilter={statusFilter}
         capabilityStatus={capabilityStatus}
         capabilityNotes={capabilityNotes}
         selectedCapabilityId={popover?.id ?? null}
-        onToggle={(next) => setCategoryEnabled(cat.id, next)}
+        onToggle={(next) => handleCategoryToggle(cat.id, cat.name, next)}
         onPillClick={handlePillClick}
         onBulkSetStatus={(ids, status) => setCategoryCapabilityStatuses(ids, status)}
         onBulkClearNotes={(ids) => clearCategoryCapabilityNotes(ids)}
@@ -227,19 +259,26 @@ export function CapabilityMapView() {
                   </div>
                 </SortableContext>
 
-                {unlicensedCategories.length > 0 && (
+                <AiNativeSection
+                  searchTerm={searchTerm}
+                  statusFilter={statusFilter}
+                  capabilityStatus={capabilityStatus}
+                  capabilityNotes={capabilityNotes}
+                  selectedCapabilityId={popover?.id ?? null}
+                  onPillClick={handlePillClick}
+                />
+
+                {inactiveCategories.length > 0 && (
                   <>
                     <div className="mt-6 mb-2 flex items-center gap-2 border-b border-border pb-1.5">
                       <h2 className="text-xs font-medium uppercase tracking-wide text-fg-muted">
-                        Unlicensed
+                        Inactive
                       </h2>
-                      <span className="text-xs text-fg-subtle">
-                        ({unlicensedCategories.length})
-                      </span>
+                      <span className="text-xs text-fg-subtle">({inactiveCategories.length})</span>
                     </div>
-                    <SortableContext items={unlicensedIds} strategy={rectSortingStrategy}>
+                    <SortableContext items={inactiveIds} strategy={rectSortingStrategy}>
                       <div className="grid gap-3" style={GRID_STYLE}>
-                        {unlicensedCategories.map(renderCard)}
+                        {inactiveCategories.map(renderCard)}
                       </div>
                     </SortableContext>
                   </>
@@ -250,32 +289,31 @@ export function CapabilityMapView() {
                 <div className="grid gap-3" style={GRID_STYLE}>
                   {activeCategories.map(renderCard)}
                 </div>
-                {unlicensedCategories.length > 0 && (
+
+                <AiNativeSection
+                  searchTerm={searchTerm}
+                  statusFilter={statusFilter}
+                  capabilityStatus={capabilityStatus}
+                  capabilityNotes={capabilityNotes}
+                  selectedCapabilityId={popover?.id ?? null}
+                  onPillClick={handlePillClick}
+                />
+
+                {inactiveCategories.length > 0 && (
                   <>
                     <div className="mt-6 mb-2 flex items-center gap-2 border-b border-border pb-1.5">
                       <h2 className="text-xs font-medium uppercase tracking-wide text-fg-muted">
-                        Unlicensed
+                        Inactive
                       </h2>
-                      <span className="text-xs text-fg-subtle">
-                        ({unlicensedCategories.length})
-                      </span>
+                      <span className="text-xs text-fg-subtle">({inactiveCategories.length})</span>
                     </div>
                     <div className="grid gap-3" style={GRID_STYLE}>
-                      {unlicensedCategories.map(renderCard)}
+                      {inactiveCategories.map(renderCard)}
                     </div>
                   </>
                 )}
               </>
             )}
-
-            <AiNativeSection
-              searchTerm={searchTerm}
-              statusFilter={statusFilter}
-              capabilityStatus={capabilityStatus}
-              capabilityNotes={capabilityNotes}
-              selectedCapabilityId={popover?.id ?? null}
-              onPillClick={handlePillClick}
-            />
           </div>
         )}
       </div>
@@ -291,6 +329,20 @@ export function CapabilityMapView() {
           onClose={closePopover}
         />
       )}
+
+      <div
+        aria-live="polite"
+        className="pointer-events-none fixed bottom-4 left-1/2 z-50 -translate-x-1/2"
+      >
+        <div
+          role="status"
+          className={`rounded border border-border bg-bg-overlay px-3 py-1.5 text-xs text-fg shadow-md transition-all duration-150 ${
+            toast ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-1 opacity-0'
+          }`}
+        >
+          {toast ?? ' '}
+        </div>
+      </div>
     </div>
   );
 }

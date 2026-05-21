@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CapabilityMapState } from '../../../shared/file-format';
-import { groupedSeed, isCategoryUnlicensed, partitionCategories } from '../capability-map';
+import { groupedSeed, isCategoryInactive, partitionCategories } from '../capability-map';
 
 const SOLUTION_CATS = groupedSeed.solutionCategories;
 const FIRST = SOLUTION_CATS[0]!;
@@ -17,53 +17,56 @@ function emptyState(overrides: Partial<CapabilityMapState> = {}): CapabilityMapS
   };
 }
 
-describe('isCategoryUnlicensed', () => {
+describe('isCategoryInactive', () => {
   it('returns true when the category is toggled off', () => {
     const state = emptyState({ categoryEnabled: { [FIRST.id]: false } });
-    expect(isCategoryUnlicensed(state, FIRST.id, FIRST_CAPS)).toBe(true);
+    expect(isCategoryInactive(state, FIRST.id)).toBe(true);
   });
 
-  it('returns true by default (all capabilities implicitly not-licensed)', () => {
-    expect(isCategoryUnlicensed(emptyState(), FIRST.id, FIRST_CAPS)).toBe(true);
+  it('returns false by default (toggle defaults to on)', () => {
+    expect(isCategoryInactive(emptyState(), FIRST.id)).toBe(false);
   });
 
-  it('returns false once any capability has a non not-licensed status', () => {
+  it('ignores capability status', () => {
     const first = FIRST_CAPS[0]!;
     const state = emptyState({ capabilityStatus: { [first.id]: 'in-use' } });
-    expect(isCategoryUnlicensed(state, FIRST.id, FIRST_CAPS)).toBe(false);
+    expect(isCategoryInactive(state, FIRST.id)).toBe(false);
   });
 
-  it('toggle-off wins over any capability status', () => {
+  it('still inactive when capabilities have non-default status but toggle is off', () => {
     const first = FIRST_CAPS[0]!;
     const state = emptyState({
       categoryEnabled: { [FIRST.id]: false },
       capabilityStatus: { [first.id]: 'in-use' },
     });
-    expect(isCategoryUnlicensed(state, FIRST.id, FIRST_CAPS)).toBe(true);
+    expect(isCategoryInactive(state, FIRST.id)).toBe(true);
   });
 });
 
 describe('partitionCategories', () => {
-  it('places every category in unlicensed by default', () => {
-    const { active, unlicensed } = partitionCategories(SOLUTION_CATS, emptyState());
-    expect(active.length).toBe(0);
-    expect(unlicensed.length).toBe(SOLUTION_CATS.length);
+  it('places every category in active by default', () => {
+    const { active, inactive } = partitionCategories(SOLUTION_CATS, emptyState());
+    expect(active.length).toBe(SOLUTION_CATS.length);
+    expect(inactive.length).toBe(0);
   });
 
-  it('moves a category to active once one of its capabilities is not "not-licensed"', () => {
+  it('moves a category to inactive when its toggle is off', () => {
+    const state = emptyState({ categoryEnabled: { [FIRST.id]: false } });
+    const { active, inactive } = partitionCategories(SOLUTION_CATS, state);
+    expect(inactive.map((c) => c.id)).toContain(FIRST.id);
+    expect(active.map((c) => c.id)).not.toContain(FIRST.id);
+  });
+
+  it('does not move a category when only its capability statuses change', () => {
     const cap = FIRST_CAPS[0]!;
-    const state = emptyState({ capabilityStatus: { [cap.id]: 'planning' } });
-    const { active, unlicensed } = partitionCategories(SOLUTION_CATS, state);
+    const state = emptyState({ capabilityStatus: { [cap.id]: 'in-use' } });
+    const { active, inactive } = partitionCategories(SOLUTION_CATS, state);
     expect(active.map((c) => c.id)).toContain(FIRST.id);
-    expect(unlicensed.map((c) => c.id)).not.toContain(FIRST.id);
+    expect(inactive.map((c) => c.id)).not.toContain(FIRST.id);
   });
 
   it('respects categoryOrder within each partition', () => {
-    const firstCap = FIRST_CAPS[0]!;
-    const secondCaps = groupedSeed.capabilitiesByCategory.get(SECOND.id) ?? [];
-    const secondCap = secondCaps[0]!;
     const state = emptyState({
-      capabilityStatus: { [firstCap.id]: 'in-use', [secondCap.id]: 'in-use' },
       categoryOrder: [SECOND.id, FIRST.id],
     });
     const { active } = partitionCategories(SOLUTION_CATS, state);
@@ -72,8 +75,8 @@ describe('partitionCategories', () => {
   });
 
   it('falls back to displayOrder for categories absent from categoryOrder', () => {
-    const { unlicensed } = partitionCategories(SOLUTION_CATS, emptyState());
-    const idsInOrder = unlicensed.map((c) => c.id);
+    const { active } = partitionCategories(SOLUTION_CATS, emptyState());
+    const idsInOrder = active.map((c) => c.id);
     const seedIds = SOLUTION_CATS.map((c) => c.id);
     expect(idsInOrder).toEqual(seedIds);
   });

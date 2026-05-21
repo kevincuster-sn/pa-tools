@@ -1,7 +1,6 @@
 import type { CapabilityMapState } from '../../shared/file-format';
 import seedJson from '../data/capability-map.seed.json';
 import type { AiNativePillar, Capability, CapabilityMapSeed, Category } from '../data/types';
-import { getCapabilityStatus } from './capability-status';
 
 export const seed = seedJson as CapabilityMapSeed;
 
@@ -79,30 +78,18 @@ export const capabilityToCategoryId: ReadonlyMap<string, string> = (() => {
   return map;
 })();
 
-export function isCategoryUnlicensed(
-  state: CapabilityMapState,
-  categoryId: string,
-  capabilities: readonly Capability[],
-): boolean {
-  if (state.categoryEnabled[categoryId] === false) return true;
-  if (capabilities.length === 0) return false;
-  for (const cap of capabilities) {
-    if (getCapabilityStatus(state.capabilityStatus, cap.id) !== 'not-licensed') {
-      return false;
-    }
-  }
-  return true;
+export function isCategoryInactive(state: CapabilityMapState, categoryId: string): boolean {
+  return state.categoryEnabled[categoryId] === false;
 }
 
 export interface PartitionedCategories {
   active: Category[];
-  unlicensed: Category[];
+  inactive: Category[];
 }
 
 export function partitionCategories(
   solutionCategories: readonly Category[],
   state: CapabilityMapState,
-  capabilitiesByCategory: ReadonlyMap<string, Capability[]> = groupedSeed.capabilitiesByCategory,
 ): PartitionedCategories {
   const order = state.categoryOrder;
   const orderIndex = new Map<string, number>();
@@ -118,18 +105,17 @@ export function partitionCategories(
   };
 
   const active: Category[] = [];
-  const unlicensed: Category[] = [];
+  const inactive: Category[] = [];
   for (const cat of solutionCategories) {
-    const caps = capabilitiesByCategory.get(cat.id) ?? [];
-    if (isCategoryUnlicensed(state, cat.id, caps)) {
-      unlicensed.push(cat);
+    if (isCategoryInactive(state, cat.id)) {
+      inactive.push(cat);
     } else {
       active.push(cat);
     }
   }
   active.sort(sorter);
-  unlicensed.sort(sorter);
-  return { active, unlicensed };
+  inactive.sort(sorter);
+  return { active, inactive };
 }
 
 export function isCategoryEnabled(

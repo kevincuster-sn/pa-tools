@@ -92,24 +92,16 @@ describe('section transitions reposition categoryOrder', () => {
 
   const FIRST = groupedSeed.solutionCategories[0]!;
   const SECOND = groupedSeed.solutionCategories[1]!;
-  const FIRST_CAP = (groupedSeed.capabilitiesByCategory.get(FIRST.id) ?? [])[0]!;
-  const SECOND_CAP = (groupedSeed.capabilitiesByCategory.get(SECOND.id) ?? [])[0]!;
 
   it('sends a category to the end of categoryOrder when toggled off', () => {
-    // First, give both cats some non-unlicensed status so they're Active.
-    useDocumentStore.getState().setCapabilityStatus(FIRST_CAP.id, 'in-use');
-    useDocumentStore.getState().setCapabilityStatus(SECOND_CAP.id, 'in-use');
     useDocumentStore.getState().setCategoryEnabled(FIRST.id, false);
     const order = useDocumentStore.getState().currentDocument!.capabilityMap.categoryOrder;
     expect(order[order.length - 1]).toBe(FIRST.id);
   });
 
   it('returns a category to the end of the Active segment when re-activated', () => {
-    // Both Active, FIRST listed before SECOND
-    useDocumentStore.getState().setCapabilityStatus(FIRST_CAP.id, 'in-use');
-    useDocumentStore.getState().setCapabilityStatus(SECOND_CAP.id, 'in-use');
     useDocumentStore.getState().setCategoryOrder([FIRST.id, SECOND.id]);
-    // Toggle FIRST off (goes to end / unlicensed)
+    // Toggle FIRST off — goes to end / inactive
     useDocumentStore.getState().setCategoryEnabled(FIRST.id, false);
     let order = useDocumentStore.getState().currentDocument!.capabilityMap.categoryOrder;
     expect(order).toEqual(expect.arrayContaining([FIRST.id, SECOND.id]));
@@ -120,14 +112,13 @@ describe('section transitions reposition categoryOrder', () => {
     expect(order.indexOf(FIRST.id)).toBeGreaterThan(order.indexOf(SECOND.id));
   });
 
-  it('triggers transition via capability bulk status change', () => {
-    // Start Active by setting one cap to in-use
-    useDocumentStore.getState().setCapabilityStatus(FIRST_CAP.id, 'in-use');
-    // Bulk-set everything in FIRST back to not-licensed → becomes Unlicensed
+  it('does not trigger a transition on bulk capability status change', () => {
+    useDocumentStore.getState().setCategoryOrder([FIRST.id, SECOND.id]);
+    const before = useDocumentStore.getState().currentDocument!.capabilityMap.categoryOrder;
     const capIds = (groupedSeed.capabilitiesByCategory.get(FIRST.id) ?? []).map((c) => c.id);
     useDocumentStore.getState().setCategoryCapabilityStatuses(capIds, 'not-licensed');
-    const order = useDocumentStore.getState().currentDocument!.capabilityMap.categoryOrder;
-    expect(order[order.length - 1]).toBe(FIRST.id);
+    const after = useDocumentStore.getState().currentDocument!.capabilityMap.categoryOrder;
+    expect(after).toEqual(before);
   });
 });
 

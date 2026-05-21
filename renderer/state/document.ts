@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { emptyDocument, type CapabilityStatus, type Document } from '../../shared/file-format';
-import { capabilityToCategoryId, groupedSeed, isCategoryUnlicensed } from '../lib/capability-map';
+import { groupedSeed, isCategoryInactive } from '../lib/capability-map';
 
 export interface DocumentState {
   currentDocument: Document | null;
@@ -25,15 +25,16 @@ export interface DocumentState {
   setFilePath: (path: string | null) => void;
 }
 
-function categoryUnlicensedIn(doc: Document, categoryId: string): boolean {
-  const caps = groupedSeed.capabilitiesByCategory.get(categoryId) ?? [];
-  return isCategoryUnlicensed(doc.capabilityMap, categoryId, caps);
+function categoryInactiveIn(doc: Document, categoryId: string): boolean {
+  return isCategoryInactive(doc.capabilityMap, categoryId);
 }
 
-// After a state change, reposition any affected categories whose section
-// membership flipped: Active→Unlicensed sends the id to the end of the
-// Unlicensed segment (end of categoryOrder); Unlicensed→Active sends it to the
+// After a toggle change, reposition the affected category if its section
+// membership flipped: Active→Inactive sends the id to the end of the
+// Inactive segment (end of categoryOrder); Inactive→Active sends it to the
 // end of the Active segment (just after the last currently-active id).
+// Only `setCategoryEnabled` can trigger this — capability status changes no
+// longer affect section membership.
 function applyTransitions(
   before: Document,
   after: Document,
@@ -56,18 +57,18 @@ function applyTransitions(
     const isSolution = groupedSeed.solutionCategories.some((c) => c.id === categoryId);
     if (!isSolution) continue;
 
-    const wasUnlicensed = categoryUnlicensedIn(before, categoryId);
-    const isUnlicensed = categoryUnlicensedIn(after, categoryId);
-    if (wasUnlicensed === isUnlicensed) continue;
+    const wasInactive = categoryInactiveIn(before, categoryId);
+    const isInactive = categoryInactiveIn(after, categoryId);
+    if (wasInactive === isInactive) continue;
 
     const withoutAffected = nextOrder.filter((id) => id !== categoryId);
-    if (isUnlicensed) {
+    if (isInactive) {
       nextOrder = [...withoutAffected, categoryId];
     } else {
       let insertAt = 0;
       for (let i = withoutAffected.length - 1; i >= 0; i--) {
         const otherId = withoutAffected[i];
-        if (otherId && !categoryUnlicensedIn(after, otherId)) {
+        if (otherId && !categoryInactiveIn(after, otherId)) {
           insertAt = i + 1;
           break;
         }
@@ -89,15 +90,6 @@ function applyTransitions(
     ...after,
     capabilityMap: { ...after.capabilityMap, categoryOrder: nextOrder },
   };
-}
-
-function uniqueCategoryIdsForCapabilities(capabilityIds: readonly string[]): string[] {
-  const ids = new Set<string>();
-  for (const cid of capabilityIds) {
-    const catId = capabilityToCategoryId.get(cid);
-    if (catId) ids.add(catId);
-  }
-  return Array.from(ids);
 }
 
 export const useDocumentStore = create<DocumentState>((set) => ({
@@ -167,11 +159,7 @@ export const useDocumentStore = create<DocumentState>((set) => ({
           },
         },
       };
-      const catId = capabilityToCategoryId.get(capabilityId);
-      return {
-        currentDocument: applyTransitions(base, after, catId ? [catId] : []),
-        isDirty: true,
-      };
+      return { currentDocument: after, isDirty: true };
     }),
 
   setCapabilityNotes: (capabilityId, notes) =>
@@ -207,13 +195,11 @@ export const useDocumentStore = create<DocumentState>((set) => ({
         }
       }
       if (!changed) return state;
-      const after: Document = {
-        ...base,
-        capabilityMap: { ...base.capabilityMap, capabilityStatus: nextStatus },
-      };
-      const affectedCategories = uniqueCategoryIdsForCapabilities(capabilityIds);
       return {
-        currentDocument: applyTransitions(base, after, affectedCategories),
+        currentDocument: {
+          ...base,
+          capabilityMap: { ...base.capabilityMap, capabilityStatus: nextStatus },
+        },
         isDirty: true,
       };
     }),

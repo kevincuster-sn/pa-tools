@@ -25,6 +25,7 @@ export interface CategoryCardProps {
   containerRef?: Ref<HTMLElement>;
   containerStyle?: CSSProperties;
   isDragging?: boolean;
+  isLeaving?: boolean;
   dragHandle?: ReactNode;
 }
 
@@ -44,6 +45,7 @@ function CategoryCardImpl({
   containerRef,
   containerStyle,
   isDragging,
+  isLeaving,
   dragHandle,
 }: CategoryCardProps) {
   const visibleCapabilities = useMemo(() => {
@@ -64,10 +66,10 @@ function CategoryCardImpl({
   return (
     <section
       ref={containerRef}
-      style={containerStyle}
+      style={isLeaving ? { ...containerStyle, opacity: 0 } : containerStyle}
       className={[
-        'flex flex-col rounded border border-border bg-bg-elevated transition-opacity',
-        enabled ? '' : 'opacity-40',
+        'flex h-full flex-col rounded border border-border bg-bg-elevated transition-opacity duration-200',
+        enabled || isLeaving ? '' : 'opacity-40',
         isDragging ? 'shadow-lg ring-1 ring-accent' : '',
       ].join(' ')}
       aria-label={category.fullName ?? category.name}
