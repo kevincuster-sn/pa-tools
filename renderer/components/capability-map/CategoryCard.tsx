@@ -6,6 +6,7 @@ import type { CapabilityStatus } from '../../../shared/file-format';
 import { matchesSearch } from '../../lib/capability-map';
 import { getCapabilityStatus } from '../../lib/capability-status';
 import { CapabilityPill } from './CapabilityPill';
+import { CategoryBulkMenu } from './CategoryBulkMenu';
 import { ToggleSwitch } from './ToggleSwitch';
 
 interface Props {
@@ -19,6 +20,8 @@ interface Props {
   selectedCapabilityId: string | null;
   onToggle: (next: boolean) => void;
   onPillClick: (capabilityId: string, anchor: HTMLElement) => void;
+  onBulkSetStatus: (capabilityIds: string[], status: CapabilityStatus) => void;
+  onBulkClearNotes: (capabilityIds: string[]) => void;
 }
 
 function CategoryCardImpl({
@@ -32,6 +35,8 @@ function CategoryCardImpl({
   selectedCapabilityId,
   onToggle,
   onPillClick,
+  onBulkSetStatus,
+  onBulkClearNotes,
 }: Props) {
   const visibleCapabilities = useMemo(() => {
     return capabilities.filter((c) => {
@@ -63,7 +68,21 @@ function CategoryCardImpl({
         >
           {category.name}
         </h3>
-        <ToggleSwitch checked={enabled} onChange={onToggle} label={`Enable ${category.name}`} />
+        <div className="flex items-center gap-1.5">
+          {capabilities.length > 0 && (
+            <CategoryBulkMenu
+              categoryName={category.name}
+              onSetAllStatus={(status) =>
+                onBulkSetStatus(
+                  capabilities.map((c) => c.id),
+                  status,
+                )
+              }
+              onClearNotes={() => onBulkClearNotes(capabilities.map((c) => c.id))}
+            />
+          )}
+          <ToggleSwitch checked={enabled} onChange={onToggle} label={`Enable ${category.name}`} />
+        </div>
       </header>
       <div
         role="list"

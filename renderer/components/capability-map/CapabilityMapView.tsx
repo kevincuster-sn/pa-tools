@@ -18,7 +18,8 @@ export function CapabilityMapView() {
   const setCapabilityStatus = useDocumentStore((s) => s.setCapabilityStatus);
   const setCapabilityNotes = useDocumentStore((s) => s.setCapabilityNotes);
   const loadDocument = useDocumentStore((s) => s.loadDocument);
-  // setCategoryCapabilityStatuses and clearCategoryCapabilityNotes are wired in Task 8.
+  const setCategoryCapabilityStatuses = useDocumentStore((s) => s.setCategoryCapabilityStatuses);
+  const clearCategoryCapabilityNotes = useDocumentStore((s) => s.clearCategoryCapabilityNotes);
 
   const [searchTermRaw, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -132,6 +133,8 @@ export function CapabilityMapView() {
                     selectedCapabilityId={popover?.id ?? null}
                     onToggle={(next) => setCategoryEnabled(cat.id, next)}
                     onPillClick={handlePillClick}
+                    onBulkSetStatus={(ids, status) => setCategoryCapabilityStatuses(ids, status)}
+                    onBulkClearNotes={(ids) => clearCategoryCapabilityNotes(ids)}
                   />
                 );
               })}
