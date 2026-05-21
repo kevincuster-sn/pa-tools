@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { emptyDocument, type CapabilityStatus, type Document } from '../../shared/file-format';
+import { capabilityToCategoryId, groupedSeed, isCategoryUnlicensed } from '../lib/capability-map';
 
 export interface DocumentState {
   currentDocument: Document | null;
@@ -18,9 +19,85 @@ export interface DocumentState {
     status: CapabilityStatus,
   ) => void;
   clearCategoryCapabilityNotes: (capabilityIds: readonly string[]) => void;
+  setCategoryOrder: (order: string[]) => void;
   markDirty: () => void;
   markClean: (savedAt?: number) => void;
   setFilePath: (path: string | null) => void;
+}
+
+function categoryUnlicensedIn(doc: Document, categoryId: string): boolean {
+  const caps = groupedSeed.capabilitiesByCategory.get(categoryId) ?? [];
+  return isCategoryUnlicensed(doc.capabilityMap, categoryId, caps);
+}
+
+// After a state change, reposition any affected categories whose section
+// membership flipped: Active→Unlicensed sends the id to the end of the
+// Unlicensed segment (end of categoryOrder); Unlicensed→Active sends it to the
+// end of the Active segment (just after the last currently-active id).
+function applyTransitions(
+  before: Document,
+  after: Document,
+  affectedCategoryIds: readonly string[],
+): Document {
+  if (affectedCategoryIds.length === 0) return after;
+  // Canonical full order: existing order + missing solution categories in seed order.
+  const existing = after.capabilityMap.categoryOrder;
+  const present = new Set(existing);
+  const fullOrder: string[] = [...existing];
+  for (const c of groupedSeed.solutionCategories) {
+    if (!present.has(c.id)) fullOrder.push(c.id);
+  }
+
+  let nextOrder = fullOrder;
+  let mutated = false;
+  for (const categoryId of affectedCategoryIds) {
+    if (!groupedSeed.capabilitiesByCategory.has(categoryId)) continue;
+    // Only solution categories are reorderable.
+    const isSolution = groupedSeed.solutionCategories.some((c) => c.id === categoryId);
+    if (!isSolution) continue;
+
+    const wasUnlicensed = categoryUnlicensedIn(before, categoryId);
+    const isUnlicensed = categoryUnlicensedIn(after, categoryId);
+    if (wasUnlicensed === isUnlicensed) continue;
+
+    const withoutAffected = nextOrder.filter((id) => id !== categoryId);
+    if (isUnlicensed) {
+      nextOrder = [...withoutAffected, categoryId];
+    } else {
+      let insertAt = 0;
+      for (let i = withoutAffected.length - 1; i >= 0; i--) {
+        const otherId = withoutAffected[i];
+        if (otherId && !categoryUnlicensedIn(after, otherId)) {
+          insertAt = i + 1;
+          break;
+        }
+      }
+      nextOrder = [
+        ...withoutAffected.slice(0, insertAt),
+        categoryId,
+        ...withoutAffected.slice(insertAt),
+      ];
+    }
+    mutated = true;
+  }
+
+  // If we expanded the canonical list with seed categories, persist that too
+  // so future renders are stable.
+  const expandedFromExisting = nextOrder.length !== existing.length;
+  if (!mutated && !expandedFromExisting) return after;
+  return {
+    ...after,
+    capabilityMap: { ...after.capabilityMap, categoryOrder: nextOrder },
+  };
+}
+
+function uniqueCategoryIdsForCapabilities(capabilityIds: readonly string[]): string[] {
+  const ids = new Set<string>();
+  for (const cid of capabilityIds) {
+    const catId = capabilityToCategoryId.get(cid);
+    if (catId) ids.add(catId);
+  }
+  return Array.from(ids);
 }
 
 export const useDocumentStore = create<DocumentState>((set) => ({
@@ -59,17 +136,18 @@ export const useDocumentStore = create<DocumentState>((set) => ({
       const base = state.currentDocument ?? emptyDocument();
       const current = base.capabilityMap.categoryEnabled[categoryId];
       if (current === enabled) return state;
-      return {
-        currentDocument: {
-          ...base,
-          capabilityMap: {
-            ...base.capabilityMap,
-            categoryEnabled: {
-              ...base.capabilityMap.categoryEnabled,
-              [categoryId]: enabled,
-            },
+      const after: Document = {
+        ...base,
+        capabilityMap: {
+          ...base.capabilityMap,
+          categoryEnabled: {
+            ...base.capabilityMap.categoryEnabled,
+            [categoryId]: enabled,
           },
         },
+      };
+      return {
+        currentDocument: applyTransitions(base, after, [categoryId]),
         isDirty: true,
       };
     }),
@@ -79,17 +157,19 @@ export const useDocumentStore = create<DocumentState>((set) => ({
       const base = state.currentDocument ?? emptyDocument();
       const current = base.capabilityMap.capabilityStatus[capabilityId];
       if (current === status) return state;
-      return {
-        currentDocument: {
-          ...base,
-          capabilityMap: {
-            ...base.capabilityMap,
-            capabilityStatus: {
-              ...base.capabilityMap.capabilityStatus,
-              [capabilityId]: status,
-            },
+      const after: Document = {
+        ...base,
+        capabilityMap: {
+          ...base.capabilityMap,
+          capabilityStatus: {
+            ...base.capabilityMap.capabilityStatus,
+            [capabilityId]: status,
           },
         },
+      };
+      const catId = capabilityToCategoryId.get(capabilityId);
+      return {
+        currentDocument: applyTransitions(base, after, catId ? [catId] : []),
         isDirty: true,
       };
     }),
@@ -127,11 +207,13 @@ export const useDocumentStore = create<DocumentState>((set) => ({
         }
       }
       if (!changed) return state;
+      const after: Document = {
+        ...base,
+        capabilityMap: { ...base.capabilityMap, capabilityStatus: nextStatus },
+      };
+      const affectedCategories = uniqueCategoryIdsForCapabilities(capabilityIds);
       return {
-        currentDocument: {
-          ...base,
-          capabilityMap: { ...base.capabilityMap, capabilityStatus: nextStatus },
-        },
+        currentDocument: applyTransitions(base, after, affectedCategories),
         isDirty: true,
       };
     }),
@@ -153,6 +235,22 @@ export const useDocumentStore = create<DocumentState>((set) => ({
         currentDocument: {
           ...base,
           capabilityMap: { ...base.capabilityMap, capabilityNotes: nextNotes },
+        },
+        isDirty: true,
+      };
+    }),
+
+  setCategoryOrder: (order) =>
+    set((state) => {
+      const base = state.currentDocument ?? emptyDocument();
+      const current = base.capabilityMap.categoryOrder;
+      if (current.length === order.length && current.every((id, idx) => id === order[idx])) {
+        return state;
+      }
+      return {
+        currentDocument: {
+          ...base,
+          capabilityMap: { ...base.capabilityMap, categoryOrder: order },
         },
         isDirty: true,
       };

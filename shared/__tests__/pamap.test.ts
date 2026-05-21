@@ -16,6 +16,7 @@ const sampleDoc: Document = {
     capabilityNotes: {
       'change-management': 'Q3 rollout',
     },
+    categoryOrder: ['itsm', 'csm', 'hrsd'],
   },
 };
 
@@ -84,6 +85,36 @@ describe('packPamap / unpackPamap', () => {
         expect.objectContaining({ path: expect.stringContaining('capabilityMap') }),
       ]),
     });
+  });
+
+  it('loads a legacy document that lacks categoryOrder by defaulting to []', async () => {
+    const zip = new JSZip();
+    zip.file(
+      PAMAP_ENTRIES.manifest,
+      JSON.stringify({
+        formatVersion: 1,
+        appVersion: '0.0.1',
+        createdAt: 'now',
+        updatedAt: 'now',
+        fileId: 'legacy',
+      }),
+    );
+    zip.file(
+      PAMAP_ENTRIES.document,
+      JSON.stringify({
+        customer: { name: 'Legacy' },
+        capabilityMap: {
+          categoryEnabled: { itsm: true },
+          capabilityStatus: { 'incident-management': 'in-use' },
+          capabilityNotes: {},
+          // no categoryOrder
+        },
+      }),
+    );
+    zip.file(PAMAP_ENTRIES.capabilityMap, '{}');
+    const bytes = await zip.generateAsync({ type: 'uint8array' });
+    const bundle = await unpackPamap(bytes);
+    expect(bundle.document.capabilityMap.categoryOrder).toEqual([]);
   });
 
   it('refuses to open a file from a newer format version', async () => {

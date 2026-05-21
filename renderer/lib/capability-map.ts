@@ -1,5 +1,7 @@
+import type { CapabilityMapState } from '../../shared/file-format';
 import seedJson from '../data/capability-map.seed.json';
 import type { AiNativePillar, Capability, CapabilityMapSeed, Category } from '../data/types';
+import { getCapabilityStatus } from './capability-status';
 
 export const seed = seedJson as CapabilityMapSeed;
 
@@ -66,6 +68,69 @@ function groupSeed(s: CapabilityMapSeed): GroupedSeed {
 }
 
 export const groupedSeed: GroupedSeed = groupSeed(seed);
+
+export const capabilityToCategoryId: ReadonlyMap<string, string> = (() => {
+  const map = new Map<string, string>();
+  for (const cat of seed.categories) {
+    for (const cap of cat.capabilities) {
+      map.set(cap.id, cat.id);
+    }
+  }
+  return map;
+})();
+
+export function isCategoryUnlicensed(
+  state: CapabilityMapState,
+  categoryId: string,
+  capabilities: readonly Capability[],
+): boolean {
+  if (state.categoryEnabled[categoryId] === false) return true;
+  if (capabilities.length === 0) return false;
+  for (const cap of capabilities) {
+    if (getCapabilityStatus(state.capabilityStatus, cap.id) !== 'not-licensed') {
+      return false;
+    }
+  }
+  return true;
+}
+
+export interface PartitionedCategories {
+  active: Category[];
+  unlicensed: Category[];
+}
+
+export function partitionCategories(
+  solutionCategories: readonly Category[],
+  state: CapabilityMapState,
+  capabilitiesByCategory: ReadonlyMap<string, Capability[]> = groupedSeed.capabilitiesByCategory,
+): PartitionedCategories {
+  const order = state.categoryOrder;
+  const orderIndex = new Map<string, number>();
+  order.forEach((id, idx) => orderIndex.set(id, idx));
+
+  const sorter = (a: Category, b: Category) => {
+    const ai = orderIndex.get(a.id);
+    const bi = orderIndex.get(b.id);
+    if (ai !== undefined && bi !== undefined) return ai - bi;
+    if (ai !== undefined) return -1;
+    if (bi !== undefined) return 1;
+    return a.displayOrder - b.displayOrder;
+  };
+
+  const active: Category[] = [];
+  const unlicensed: Category[] = [];
+  for (const cat of solutionCategories) {
+    const caps = capabilitiesByCategory.get(cat.id) ?? [];
+    if (isCategoryUnlicensed(state, cat.id, caps)) {
+      unlicensed.push(cat);
+    } else {
+      active.push(cat);
+    }
+  }
+  active.sort(sorter);
+  unlicensed.sort(sorter);
+  return { active, unlicensed };
+}
 
 export function isCategoryEnabled(
   categoryEnabled: Record<string, boolean>,

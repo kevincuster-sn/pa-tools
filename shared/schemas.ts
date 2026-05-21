@@ -21,6 +21,7 @@ export const CapabilityMapStateSchema = z.object({
   categoryEnabled: z.record(z.string(), z.boolean()),
   capabilityStatus: z.record(z.string(), CapabilityStatusSchema),
   capabilityNotes: z.record(z.string(), z.string()),
+  categoryOrder: z.array(z.string()).default([]),
 });
 
 export const CustomerInfoSchema = z.object({

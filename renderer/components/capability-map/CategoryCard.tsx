@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useMemo } from 'react';
+import { memo, useMemo, type CSSProperties, type ReactNode, type Ref } from 'react';
 import type { Capability, Category } from '../../data/types';
 import type { CapabilityStatus } from '../../../shared/file-format';
 import { matchesSearch } from '../../lib/capability-map';
@@ -9,7 +9,7 @@ import { CapabilityPill } from './CapabilityPill';
 import { CategoryBulkMenu } from './CategoryBulkMenu';
 import { ToggleSwitch } from './ToggleSwitch';
 
-interface Props {
+export interface CategoryCardProps {
   category: Category;
   capabilities: Capability[];
   enabled: boolean;
@@ -22,6 +22,10 @@ interface Props {
   onPillClick: (capabilityId: string, anchor: HTMLElement) => void;
   onBulkSetStatus: (capabilityIds: string[], status: CapabilityStatus) => void;
   onBulkClearNotes: (capabilityIds: string[]) => void;
+  containerRef?: Ref<HTMLElement>;
+  containerStyle?: CSSProperties;
+  isDragging?: boolean;
+  dragHandle?: ReactNode;
 }
 
 function CategoryCardImpl({
@@ -37,7 +41,11 @@ function CategoryCardImpl({
   onPillClick,
   onBulkSetStatus,
   onBulkClearNotes,
-}: Props) {
+  containerRef,
+  containerStyle,
+  isDragging,
+  dragHandle,
+}: CategoryCardProps) {
   const visibleCapabilities = useMemo(() => {
     return capabilities.filter((c) => {
       if (searchTerm && !matchesSearch(c.name, searchTerm)) return false;
@@ -55,19 +63,25 @@ function CategoryCardImpl({
 
   return (
     <section
+      ref={containerRef}
+      style={containerStyle}
       className={[
         'flex flex-col rounded border border-border bg-bg-elevated transition-opacity',
         enabled ? '' : 'opacity-40',
+        isDragging ? 'shadow-lg ring-1 ring-accent' : '',
       ].join(' ')}
       aria-label={category.fullName ?? category.name}
     >
       <header className="flex items-center justify-between gap-2 border-b border-border px-2.5 py-1.5">
-        <h3
-          className="truncate text-sm font-medium text-fg"
-          title={category.fullName ?? category.name}
-        >
-          {category.name}
-        </h3>
+        <div className="flex min-w-0 items-center gap-1.5">
+          {dragHandle}
+          <h3
+            className="truncate text-sm font-medium text-fg"
+            title={category.fullName ?? category.name}
+          >
+            {category.name}
+          </h3>
+        </div>
         <div className="flex items-center gap-1.5">
           {capabilities.length > 0 && (
             <CategoryBulkMenu

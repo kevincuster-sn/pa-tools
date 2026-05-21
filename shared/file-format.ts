@@ -34,10 +34,14 @@ export type CapabilityStatus =
 
 // Customer-specific state attached to the seed capability map.
 // Absent keys default: categoryEnabled = true, capabilityStatus = 'not-licensed'.
+// categoryOrder is a flat ordered list of solution-category IDs reflecting the
+// user's personalized arrangement across both Active and Unlicensed sections;
+// IDs absent from the array fall back to the seed's displayOrder.
 export interface CapabilityMapState {
   categoryEnabled: Record<string, boolean>;
   capabilityStatus: Record<string, CapabilityStatus>;
   capabilityNotes: Record<string, string>;
+  categoryOrder: string[];
 }
 
 export interface CustomerInfo {
@@ -64,6 +68,7 @@ export function emptyDocument(): Document {
       categoryEnabled: {},
       capabilityStatus: {},
       capabilityNotes: {},
+      categoryOrder: [],
     },
   };
 }
