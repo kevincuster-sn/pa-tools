@@ -17,4 +17,4 @@ seed-sources/diff-report-*.md
 # `capability-map.seed.json` next to it.
 renderer/data/capability-map.seed.next.json
 
-renderer/tsconfig.tsbuildinfo
+*.tsbuildinfo
