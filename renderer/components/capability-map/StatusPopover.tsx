@@ -128,7 +128,7 @@ export function StatusPopover({
         {capabilityName}
       </header>
 
-      <fieldset className="mb-3" role="radiogroup" aria-label="Status">
+      <fieldset className="mb-3" aria-label="Status">
         <legend className="sr-only">Status</legend>
         <div className="flex flex-col gap-0.5">
           {STATUSES.map((s) => (

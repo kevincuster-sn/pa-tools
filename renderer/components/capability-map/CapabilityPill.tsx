@@ -19,7 +19,7 @@ function CapabilityPillImpl({ capability, status, hasNotes, disabled, selected, 
   const interactive = !disabled && Boolean(onClick);
 
   return (
-    <li role="listitem" className="w-full">
+    <div role="listitem" className="w-full">
       <button
         type="button"
         aria-label={`${capability.name} — ${meta.label}${hasNotes ? ', has notes' : ''}`}
@@ -54,7 +54,7 @@ function CapabilityPillImpl({ capability, status, hasNotes, disabled, selected, 
           />
         )}
       </button>
-    </li>
+    </div>
   );
 }
 
