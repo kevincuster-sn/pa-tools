@@ -335,7 +335,7 @@ Important: this MUST preserve customer-specific state in existing `.pamap` files
 4. **Archived statuses**: extend `CapabilityMapState` with `archivedCapabilities: Array<{ id, name, status, notes, archivedAt, reason }>`. Surface these in a collapsed "Archived" section in the capability map view so a PA can see what used to be tracked but no longer applies.
 
 5. **CLI flow documented in README**:
-```
+
 
 # When ServiceNow publishes a new Full Capability Map slide:
 
@@ -347,7 +347,7 @@ Important: this MUST preserve customer-specific state in existing `.pamap` files
 6.  Test by opening an old .pamap file — verify the migration banner appears
 7.  Ship the new app build
 
-```
+
 
 When the diff script produces a sensible report against a hand-modified copy of the source pptx (rename one category, delete one capability, add one capability — verify the diff catches all three), stop and show me the diff output. That's Feature #1 complete with future-proof maintenance.
 ```
