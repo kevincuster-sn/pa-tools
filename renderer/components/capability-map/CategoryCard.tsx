@@ -4,7 +4,11 @@ import { memo, useMemo, type CSSProperties, type ReactNode, type Ref } from 'rea
 import type { Capability, Category } from '../../data/types';
 import type { CapabilityStatus } from '../../../shared/file-format';
 import { matchesSearch } from '../../lib/capability-map';
-import { getCapabilityStatus } from '../../lib/capability-status';
+import {
+  ADOPTION_THRESHOLD_PCT,
+  computeAdoption,
+  getCapabilityStatus,
+} from '../../lib/capability-status';
 import { CapabilityPill } from './CapabilityPill';
 import { CategoryBulkMenu } from './CategoryBulkMenu';
 import { ToggleSwitch } from './ToggleSwitch';
@@ -63,6 +67,16 @@ function CategoryCardImpl({
     visibleCapabilities.length === 0 &&
     capabilities.length > 0;
 
+  const adoption = useMemo(
+    () =>
+      computeAdoption(
+        capabilities.map((c) => c.id),
+        capabilityStatus,
+      ),
+    [capabilities, capabilityStatus],
+  );
+  const adoptionBelowThreshold = adoption.licensed > 0 && adoption.pct < ADOPTION_THRESHOLD_PCT;
+
   return (
     <section
       ref={containerRef}
@@ -85,6 +99,18 @@ function CategoryCardImpl({
           </h3>
         </div>
         <div className="flex items-center gap-1.5">
+          {adoption.licensed > 0 && (
+            <span
+              className={[
+                'text-xs font-medium tabular-nums',
+                adoptionBelowThreshold ? 'text-red-600 dark:text-red-400' : 'text-fg-muted',
+              ].join(' ')}
+              title={`${adoption.adopted} of ${adoption.licensed} licensed in use`}
+              aria-label={`Adoption ${adoption.pct}%, ${adoption.adopted} of ${adoption.licensed} licensed`}
+            >
+              {adoption.pct}%
+            </span>
+          )}
           {capabilities.length > 0 && (
             <CategoryBulkMenu
               categoryName={category.name}

@@ -1,4 +1,5 @@
 allowBuilds:
+  core-js: false
   electron: true
   esbuild: true
   sharp: true
@@ -8,3 +9,5 @@ onlyBuiltDependencies:
   - esbuild
   - sharp
   - unrs-resolver
+ignoredBuiltDependencies:
+  - core-js

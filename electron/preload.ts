@@ -1,6 +1,8 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type {
   ConfirmUnsavedPayload,
+  ExportSavePayload,
+  ExportSaveResult,
   MenuActionHandler,
   OpenFileResult,
   PaToolsApi,
@@ -21,6 +23,7 @@ const CH = {
   menuAction: 'menu:action',
   requestCloseConfirm: 'app:requestCloseConfirm',
   confirmCloseResponse: 'app:confirmCloseResponse',
+  exportSave: 'file:exportSave',
 } as const;
 
 const api: PaToolsApi = {
@@ -53,6 +56,8 @@ const api: PaToolsApi = {
   confirmCloseResponse: (allow: boolean) => {
     ipcRenderer.send(CH.confirmCloseResponse, allow);
   },
+  exportSave: (payload: ExportSavePayload) =>
+    ipcRenderer.invoke(CH.exportSave, payload) as Promise<ExportSaveResult>,
 };
 
 contextBridge.exposeInMainWorld('api', api);

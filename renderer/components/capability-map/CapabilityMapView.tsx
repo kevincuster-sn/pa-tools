@@ -26,7 +26,12 @@ import {
   partitionCategories,
   seed,
 } from '../../lib/capability-map';
-import { countCapabilitiesByStatus, getCapabilityStatus } from '../../lib/capability-status';
+import {
+  computeAdoption,
+  countCapabilitiesByStatus,
+  getCapabilityStatus,
+} from '../../lib/capability-status';
+import { exportCapabilityMap, type ExportFormat } from '../../lib/export';
 import { AiNativeSection } from './AiNativeSection';
 import { CategoryCard } from './CategoryCard';
 import { HeaderStrip } from './HeaderStrip';
@@ -54,6 +59,7 @@ export function CapabilityMapView() {
   const [popover, setPopover] = useState<{ id: string; anchor: HTMLElement } | null>(null);
   const [leavingIds, setLeavingIds] = useState<ReadonlySet<string>>(new Set());
   const [toast, setToast] = useState<string | null>(null);
+  const [exportBusyFormat, setExportBusyFormat] = useState<ExportFormat | null>(null);
   // dnd-kit assigns aria-describedby ids from a global counter that differs
   // between SSR and client; defer mounting the DndContext until after hydration.
   const [dndMounted, setDndMounted] = useState(false);
@@ -96,6 +102,15 @@ export function CapabilityMapView() {
     const allIds = groupedSeed.allCapabilities.map((c) => c.id);
     return countCapabilitiesByStatus(allIds, capabilityStatus);
   }, [capabilityStatus]);
+
+  const adoption = useMemo(
+    () =>
+      computeAdoption(
+        groupedSeed.allCapabilities.map((c) => c.id),
+        capabilityStatus,
+      ),
+    [capabilityStatus],
+  );
 
   const toggleStatusFilter = useCallback((status: CapabilityStatus) => {
     setStatusFilter((prev) => {
@@ -142,6 +157,28 @@ export function CapabilityMapView() {
       }, 220);
     },
     [setCategoryEnabled],
+  );
+
+  const handleExport = useCallback(
+    async (format: ExportFormat) => {
+      if (exportBusyFormat) return;
+      setExportBusyFormat(format);
+      try {
+        const result = await exportCapabilityMap(doc, format);
+        if (result.ok) {
+          setToast(`Exported ${format.toUpperCase()}`);
+        } else if (result.cancelled) {
+          // No toast on cancel.
+        } else {
+          setToast(`Export failed: ${result.errorMessage ?? 'unknown error'}`);
+        }
+      } catch (err) {
+        setToast(`Export failed: ${err instanceof Error ? err.message : String(err)}`);
+      } finally {
+        setExportBusyFormat(null);
+      }
+    },
+    [doc, exportBusyFormat],
   );
 
   const handleDragEnd = useCallback(
@@ -236,6 +273,10 @@ export function CapabilityMapView() {
         statusFilter={statusFilter}
         onToggleStatusFilter={toggleStatusFilter}
         onClearStatusFilter={clearStatusFilter}
+        licensedCount={adoption.licensed}
+        adoptedCount={adoption.adopted}
+        onExport={handleExport}
+        exportBusyFormat={exportBusyFormat}
       />
 
       <div className="min-h-0 flex-1 overflow-auto">

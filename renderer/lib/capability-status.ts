@@ -61,6 +61,24 @@ export function getCapabilityStatus(
   return capabilityStatus[capabilityId] ?? 'not-licensed';
 }
 
+export const ADOPTION_THRESHOLD_PCT = 75;
+
+export function computeAdoption(
+  capabilityIds: readonly string[],
+  capabilityStatus: Record<string, CapabilityStatus>,
+): { licensed: number; adopted: number; pct: number } {
+  let licensed = 0;
+  let adopted = 0;
+  for (const id of capabilityIds) {
+    const s = getCapabilityStatus(capabilityStatus, id);
+    if (s === 'not-licensed') continue;
+    licensed += 1;
+    if (s === 'in-use') adopted += 1;
+  }
+  const pct = licensed > 0 ? Math.round((adopted / licensed) * 100) : 0;
+  return { licensed, adopted, pct };
+}
+
 export function countCapabilitiesByStatus(
   capabilityIds: readonly string[],
   capabilityStatus: Record<string, CapabilityStatus>,

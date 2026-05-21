@@ -30,6 +30,22 @@ export interface SaveFileAsPayload {
   document: Document;
 }
 
+export interface ExportSavePayload {
+  /** Suggested default file name (with extension). */
+  defaultName: string;
+  /** Label shown in the save dialog file filter. */
+  filterName: string;
+  /** Allowed file extensions, e.g. ['pdf']. */
+  extensions: string[];
+  /** File contents as a transferable byte array. */
+  data: Uint8Array;
+}
+
+export type ExportSaveResult =
+  | { ok: true; path: string }
+  | { ok: false; error: FileIoError }
+  | null;
+
 export interface PaToolsApi {
   openFile(): Promise<OpenFileResult>;
   openFileByPath(path: string): Promise<OpenFileResult>;
@@ -41,6 +57,7 @@ export interface PaToolsApi {
   onMenuAction(handler: MenuActionHandler): () => void;
   onRequestCloseConfirm(handler: () => void): () => void;
   confirmCloseResponse(allow: boolean): void;
+  exportSave(payload: ExportSavePayload): Promise<ExportSaveResult>;
 }
 
 export const IPC_CHANNELS = {
@@ -54,4 +71,5 @@ export const IPC_CHANNELS = {
   menuAction: 'menu:action',
   requestCloseConfirm: 'app:requestCloseConfirm',
   confirmCloseResponse: 'app:confirmCloseResponse',
+  exportSave: 'file:exportSave',
 } as const;

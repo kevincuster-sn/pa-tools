@@ -5,6 +5,8 @@ import { randomUUID } from 'crypto';
 import {
   IPC_CHANNELS,
   type ConfirmUnsavedPayload,
+  type ExportSavePayload,
+  type ExportSaveResult,
   type FileIoError,
   type OpenFileResult,
   type SaveFileAsPayload,
@@ -134,6 +136,28 @@ export function registerFileIoHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.getRecentFiles, async (): Promise<string[]> => {
     return loadRecentFiles();
   });
+
+  ipcMain.handle(
+    IPC_CHANNELS.exportSave,
+    async (event, payload: ExportSavePayload): Promise<ExportSaveResult> => {
+      const win = BrowserWindow.fromWebContents(event.sender) ?? undefined;
+      const opts: Electron.SaveDialogOptions = {
+        title: 'Export capability map',
+        defaultPath: payload.defaultName,
+        filters: [{ name: payload.filterName, extensions: payload.extensions }],
+      };
+      const result = win
+        ? await dialog.showSaveDialog(win, opts)
+        : await dialog.showSaveDialog(opts);
+      if (result.canceled || !result.filePath) return null;
+      try {
+        await fs.writeFile(result.filePath, Buffer.from(payload.data));
+        return { ok: true, path: result.filePath };
+      } catch (e) {
+        return { ok: false, error: errorToFileIoError(e) };
+      }
+    },
+  );
 
   ipcMain.handle(
     IPC_CHANNELS.confirmUnsaved,

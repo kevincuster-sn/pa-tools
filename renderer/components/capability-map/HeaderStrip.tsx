@@ -2,7 +2,9 @@
 
 import { Search } from 'lucide-react';
 import type { CapabilityStatus } from '../../../shared/file-format';
-import { STATUSES } from '../../lib/capability-status';
+import type { ExportFormat } from '../../lib/export';
+import { ADOPTION_THRESHOLD_PCT, STATUSES } from '../../lib/capability-status';
+import { ExportMenu } from './ExportMenu';
 import { StatusFilterChips } from './StatusFilterChips';
 
 interface Props {
@@ -18,6 +20,10 @@ interface Props {
   statusFilter: ReadonlySet<CapabilityStatus>;
   onToggleStatusFilter: (status: CapabilityStatus) => void;
   onClearStatusFilter: () => void;
+  licensedCount: number;
+  adoptedCount: number;
+  onExport: (format: ExportFormat) => void;
+  exportBusyFormat: ExportFormat | null;
 }
 
 export function HeaderStrip({
@@ -33,7 +39,14 @@ export function HeaderStrip({
   statusFilter,
   onToggleStatusFilter,
   onClearStatusFilter,
+  licensedCount,
+  adoptedCount,
+  onExport,
+  exportBusyFormat,
 }: Props) {
+  const adoptionPct = licensedCount > 0 ? Math.round((adoptedCount / licensedCount) * 100) : 0;
+  const adoptionBelowThreshold = licensedCount > 0 && adoptionPct < ADOPTION_THRESHOLD_PCT;
+
   return (
     <div className="flex flex-col gap-2 border-b border-border bg-bg-elevated px-4 py-2">
       <div className="flex flex-wrap items-center gap-3">
@@ -49,6 +62,26 @@ export function HeaderStrip({
             className="h-7 w-56 rounded-sm border border-border bg-bg px-2 text-sm text-fg placeholder:text-fg-subtle focus:border-accent focus:outline-none"
           />
         </label>
+
+        <div
+          className="flex items-center gap-2"
+          aria-label={`Adoption rate: ${adoptionPct}%, ${adoptedCount} of ${licensedCount} licensed capabilities in use`}
+        >
+          <span className="text-xs text-fg-muted">
+            Adoption{' '}
+            <span className="text-fg-subtle">
+              ({adoptedCount}/{licensedCount} licensed)
+            </span>
+          </span>
+          <span
+            className={[
+              'text-2xl font-semibold leading-none',
+              adoptionBelowThreshold ? 'text-red-600 dark:text-red-400' : 'text-fg',
+            ].join(' ')}
+          >
+            {adoptionPct}%
+          </span>
+        </div>
 
         <div className="text-xs text-fg-muted" aria-live="polite">
           Categories: <span className="font-medium text-fg">{enabledCount}</span> of{' '}
@@ -118,6 +151,8 @@ export function HeaderStrip({
               </button>
             ))}
           </div>
+
+          <ExportMenu busyFormat={exportBusyFormat} onExport={onExport} />
         </div>
       </div>
 
