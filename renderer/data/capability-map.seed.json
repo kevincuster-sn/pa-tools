@@ -1,1447 +1,1251 @@
 {
-  "schemaVersion": 1,
-  "generatedAt": "2026-05-19T17:04:16.931Z",
-  "sourceSlide": "2026-May_Full_Capability_Map.pptx",
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-21T00:00:00.000Z",
+  "sourceSlide": "capability_hierarchy.txt",
   "categories": [
-    {
-      "id": "core-business-transformation",
-      "name": "Core Business Transformation",
-      "layer": "solution",
-      "displayOrder": 0
-    },
     {
       "id": "cpq-sales-crm",
       "name": "CPQ/Sales CRM",
       "layer": "solution",
-      "displayOrder": 1
-    },
-    {
-      "id": "fsm",
-      "name": "FSM",
-      "layer": "solution",
-      "displayOrder": 2
-    },
-    {
-      "id": "itom",
-      "name": "ITOM",
-      "layer": "solution",
-      "displayOrder": 3
-    },
-    {
-      "id": "sam",
-      "name": "SAM",
-      "layer": "solution",
-      "displayOrder": 4
-    },
-    {
-      "id": "ea",
-      "name": "EA",
-      "layer": "solution",
-      "displayOrder": 5
-    },
-    {
-      "id": "fso",
-      "name": "FSO",
-      "layer": "solution",
-      "displayOrder": 6
-    },
-    {
-      "id": "itsm",
-      "name": "ITSM",
-      "layer": "solution",
-      "displayOrder": 7
-    },
-    {
-      "id": "eam",
-      "name": "EAM",
-      "layer": "solution",
-      "displayOrder": 8
-    },
-    {
-      "id": "irm",
-      "name": "IRM",
-      "layer": "solution",
-      "displayOrder": 9
-    },
-    {
-      "id": "workplace-service-delivery",
-      "name": "Workplace Service Delivery",
-      "layer": "solution",
-      "displayOrder": 10
-    },
-    {
-      "id": "sourcing-and-procurement-ops",
-      "name": "Sourcing & Procurement Ops",
-      "layer": "solution",
-      "displayOrder": 11
-    },
-    {
-      "id": "health-and-safety",
-      "name": "Health & Safety",
-      "layer": "solution",
-      "displayOrder": 12
-    },
-    {
-      "id": "hr-service-delivery",
-      "name": "HR Service Delivery",
-      "layer": "solution",
-      "displayOrder": 13
-    },
-    {
-      "id": "sir",
-      "name": "SIR",
-      "layer": "solution",
-      "displayOrder": 14
+      "displayOrder": 1,
+      "capabilities": [
+        {
+          "id": "order-mgmt",
+          "name": "Order Mgmt"
+        },
+        {
+          "id": "order-operations",
+          "name": "Order Operations"
+        },
+        {
+          "id": "cpq-core",
+          "name": "CPQ Core"
+        },
+        {
+          "id": "lead-mgmt-core",
+          "name": "Lead Mgmt Core"
+        },
+        {
+          "id": "opportunity-mgmt-core",
+          "name": "Opportunity Mgmt Core"
+        },
+        {
+          "id": "marketing-by-tenon",
+          "name": "Marketing by Tenon"
+        }
+      ]
     },
     {
       "id": "csm",
       "name": "CSM",
       "layer": "solution",
-      "displayOrder": 15
-    },
-    {
-      "id": "privacy-mgmt",
-      "name": "Privacy Mgmt",
-      "layer": "solution",
-      "displayOrder": 16
-    },
-    {
-      "id": "operational-technology",
-      "name": "Operational Technology",
-      "layer": "solution",
-      "displayOrder": 17
-    },
-    {
-      "id": "legal-service-delivery",
-      "name": "Legal Service Delivery",
-      "layer": "solution",
-      "displayOrder": 18
-    },
-    {
-      "id": "healthcare-and-life-sciences",
-      "name": "Healthcare & Life Sciences",
-      "layer": "solution",
-      "displayOrder": 19
-    },
-    {
-      "id": "manufacturing",
-      "name": "Manufacturing",
-      "layer": "solution",
-      "displayOrder": 20
-    },
-    {
-      "id": "spm",
-      "name": "SPM",
-      "layer": "solution",
-      "displayOrder": 21
-    },
-    {
-      "id": "tprm",
-      "name": "TPRM",
-      "layer": "solution",
-      "displayOrder": 22
-    },
-    {
-      "id": "armis-from-servicenow",
-      "name": "Armis from ServiceNow",
-      "layer": "solution",
-      "displayOrder": 23
-    },
-    {
-      "id": "veza-from-servicenow",
-      "name": "Veza from ServiceNow",
-      "layer": "solution",
-      "displayOrder": 24
-    },
-    {
-      "id": "app-development",
-      "name": "App Development",
-      "layer": "solution",
-      "displayOrder": 25
-    },
-    {
-      "id": "ai-control-tower",
-      "name": "AI Control Tower",
-      "layer": "solution",
-      "displayOrder": 26
-    },
-    {
-      "id": "vulnerability-response-usem",
-      "name": "Vulnerability Response (USEM)",
-      "layer": "solution",
-      "displayOrder": 27
-    },
-    {
-      "id": "ham",
-      "name": "HAM",
-      "layer": "solution",
-      "displayOrder": 28
+      "displayOrder": 2,
+      "capabilities": [
+        {
+          "id": "customer-case-mgmt",
+          "name": "Customer Case Mgmt"
+        },
+        {
+          "id": "engagement-messenger",
+          "name": "Engagement Messenger"
+        },
+        {
+          "id": "customer-service-portal",
+          "name": "Customer Service Portal"
+        },
+        {
+          "id": "walk-up-experience",
+          "name": "Walk-up Experience"
+        },
+        {
+          "id": "now-assist-for-csm",
+          "name": "Now Assist for CSM"
+        }
+      ]
     },
     {
       "id": "tpsm",
       "name": "TPSM",
       "layer": "solution",
-      "displayOrder": 29
+      "displayOrder": 3,
+      "capabilities": [
+        {
+          "id": "telco-and-tech-provider-service-mgmt",
+          "name": "Telco & Tech. Provider Service Mgmt"
+        },
+        {
+          "id": "csm-2",
+          "name": "CSM"
+        },
+        {
+          "id": "itsm-2",
+          "name": "ITSM"
+        },
+        {
+          "id": "service-bridge",
+          "name": "Service Bridge"
+        },
+        {
+          "id": "assurance-workflow",
+          "name": "Assurance Workflow"
+        },
+        {
+          "id": "now-assist-for-tmt",
+          "name": "Now Assist for TMT"
+        }
+      ]
     },
     {
-      "id": "public-sector",
-      "name": "Public Sector",
+      "id": "fsm",
+      "name": "FSM",
       "layer": "solution",
-      "displayOrder": 30
+      "displayOrder": 4,
+      "capabilities": [
+        {
+          "id": "work-order-mgmt",
+          "name": "Work Order Mgmt"
+        },
+        {
+          "id": "advanced-dispatching",
+          "name": "Advanced Dispatching"
+        },
+        {
+          "id": "planned-maintenance",
+          "name": "Planned Maintenance"
+        },
+        {
+          "id": "planned-work-mgmt",
+          "name": "Planned Work Mgmt"
+        },
+        {
+          "id": "contract-mgmt",
+          "name": "Contract Mgmt"
+        },
+        {
+          "id": "now-assist-for-fsm",
+          "name": "Now Assist for FSM"
+        }
+      ]
+    },
+    {
+      "id": "healthcare-and-life-sciences",
+      "name": "Healthcare & Life Sciences",
+      "layer": "solution",
+      "displayOrder": 5,
+      "capabilities": [
+        {
+          "id": "hcls-applications",
+          "name": "HCLS Applications"
+        },
+        {
+          "id": "hcls-core",
+          "name": "HCLS Core"
+        },
+        {
+          "id": "csm-3",
+          "name": "CSM"
+        },
+        {
+          "id": "itsm-3",
+          "name": "ITSM"
+        },
+        {
+          "id": "now-assist-for-care-team-operations",
+          "name": "Now Assist for Care Team Operations"
+        }
+      ]
     },
     {
       "id": "retail-service-mgmt",
       "name": "Retail Service Mgmt",
       "layer": "solution",
-      "displayOrder": 31
+      "displayOrder": 6,
+      "capabilities": [
+        {
+          "id": "psds-applications",
+          "name": "PSDS Applications"
+        },
+        {
+          "id": "retail-core",
+          "name": "Retail Core"
+        },
+        {
+          "id": "retail-applications",
+          "name": "Retail Applications"
+        },
+        {
+          "id": "csm-4",
+          "name": "CSM"
+        },
+        {
+          "id": "itsm-4",
+          "name": "ITSM"
+        },
+        {
+          "id": "now-assist-for-rsm",
+          "name": "Now Assist for RSM"
+        }
+      ]
+    },
+    {
+      "id": "fso",
+      "name": "FSO",
+      "layer": "solution",
+      "displayOrder": 7,
+      "capabilities": [
+        {
+          "id": "financial-service-and-data-model",
+          "name": "Financial Service & Data Model"
+        },
+        {
+          "id": "payment-operations",
+          "name": "Payment Operations"
+        },
+        {
+          "id": "card-operations",
+          "name": "Card Operations"
+        },
+        {
+          "id": "dispute-mgmt",
+          "name": "Dispute Mgmt"
+        },
+        {
+          "id": "loan-operations",
+          "name": "Loan Operations"
+        },
+        {
+          "id": "deposit-operations",
+          "name": "Deposit Operations"
+        },
+        {
+          "id": "treasury-operations",
+          "name": "Treasury Operations"
+        },
+        {
+          "id": "now-assist-for-fso",
+          "name": "Now Assist for FSO"
+        }
+      ]
+    },
+    {
+      "id": "manufacturing",
+      "name": "Manufacturing",
+      "layer": "solution",
+      "displayOrder": 8,
+      "capabilities": [
+        {
+          "id": "mco-applications",
+          "name": "MCO Applications"
+        },
+        {
+          "id": "csm-5",
+          "name": "CSM"
+        },
+        {
+          "id": "itsm-5",
+          "name": "ITSM"
+        },
+        {
+          "id": "now-assist-for-mco",
+          "name": "Now Assist for MCO"
+        }
+      ]
+    },
+    {
+      "id": "public-sector",
+      "name": "Public Sector",
+      "layer": "solution",
+      "displayOrder": 9,
+      "capabilities": [
+        {
+          "id": "psds-applications-2",
+          "name": "PSDS Applications"
+        },
+        {
+          "id": "psds-core",
+          "name": "PSDS Core"
+        },
+        {
+          "id": "constituent-experience",
+          "name": "Constituent Experience"
+        },
+        {
+          "id": "government-agent-experience",
+          "name": "Government agent experience"
+        },
+        {
+          "id": "csm-6",
+          "name": "CSM"
+        },
+        {
+          "id": "itsm-6",
+          "name": "ITSM"
+        },
+        {
+          "id": "now-assist-for-psds",
+          "name": "Now Assist for PSDS"
+        }
+      ]
+    },
+    {
+      "id": "ea",
+      "name": "EA",
+      "layer": "solution",
+      "displayOrder": 10,
+      "capabilities": [
+        {
+          "id": "enterprise-modeling-and-visualization",
+          "name": "Enterprise Modeling & Visualization"
+        },
+        {
+          "id": "application-rationalization",
+          "name": "Application Rationalization"
+        },
+        {
+          "id": "technology-portfolio-mgmt",
+          "name": "Technology Portfolio Mgmt"
+        },
+        {
+          "id": "bus-application-inventory",
+          "name": "Bus Application Inventory"
+        },
+        {
+          "id": "digital-integration-mgmt",
+          "name": "Digital Integration Mgmt"
+        },
+        {
+          "id": "business-capability-mgmt",
+          "name": "Business Capability Mgmt"
+        },
+        {
+          "id": "now-assist-for-ea",
+          "name": "Now Assist for EA"
+        }
+      ]
+    },
+    {
+      "id": "spm",
+      "name": "SPM",
+      "layer": "solution",
+      "displayOrder": 11,
+      "capabilities": [
+        {
+          "id": "roadmap-planning",
+          "name": "Roadmap Planning"
+        },
+        {
+          "id": "demand-mgmt",
+          "name": "Demand Mgmt"
+        },
+        {
+          "id": "project-portfolio-mgmt",
+          "name": "Project Portfolio Mgmt"
+        },
+        {
+          "id": "resource-mgmt",
+          "name": "Resource Mgmt"
+        },
+        {
+          "id": "investment-funding",
+          "name": "Investment Funding"
+        },
+        {
+          "id": "agile-development",
+          "name": "Agile Development"
+        },
+        {
+          "id": "innovation-mgmt",
+          "name": "Innovation Mgmt"
+        },
+        {
+          "id": "now-assist-for-spm",
+          "name": "Now Assist for SPM"
+        }
+      ]
+    },
+    {
+      "id": "itsm",
+      "name": "ITSM",
+      "layer": "solution",
+      "displayOrder": 12,
+      "capabilities": [
+        {
+          "id": "incident-mgmt",
+          "name": "Incident Mgmt"
+        },
+        {
+          "id": "problem-mgmt",
+          "name": "Problem Mgmt"
+        },
+        {
+          "id": "change-mgmt",
+          "name": "Change Mgmt"
+        },
+        {
+          "id": "request-mgmt",
+          "name": "Request Mgmt"
+        },
+        {
+          "id": "asset-mgmt",
+          "name": "Asset Mgmt"
+        },
+        {
+          "id": "continual-improvement",
+          "name": "Continual Improvement"
+        },
+        {
+          "id": "digital-portfolio-mgmt",
+          "name": "Digital Portfolio Mgmt"
+        },
+        {
+          "id": "digital-product-release",
+          "name": "Digital Product Release"
+        },
+        {
+          "id": "itsm-success-dashboard",
+          "name": "ITSM Success Dashboard"
+        },
+        {
+          "id": "now-assist-for-itsm",
+          "name": "Now Assist for ITSM"
+        },
+        {
+          "id": "digital-end-user-experience",
+          "name": "Digital End-User Experience"
+        }
+      ]
+    },
+    {
+      "id": "ham",
+      "name": "HAM",
+      "layer": "solution",
+      "displayOrder": 13,
+      "capabilities": [
+        {
+          "id": "hardware-asset-mgmt",
+          "name": "Hardware Asset Mgmt"
+        },
+        {
+          "id": "hardware-asset-lifecycle-mgmt",
+          "name": "Hardware Asset Lifecycle Mgmt"
+        },
+        {
+          "id": "hardware-asset-reservation",
+          "name": "Hardware Asset Reservation"
+        },
+        {
+          "id": "hardware-content-library",
+          "name": "Hardware Content Library"
+        },
+        {
+          "id": "now-assist-for-ham",
+          "name": "Now Assist for HAM"
+        }
+      ]
+    },
+    {
+      "id": "itom",
+      "name": "ITOM",
+      "layer": "solution",
+      "displayOrder": 14,
+      "capabilities": [
+        {
+          "id": "discovery",
+          "name": "Discovery"
+        },
+        {
+          "id": "service-mapping",
+          "name": "Service Mapping"
+        },
+        {
+          "id": "service-graph-connectors",
+          "name": "Service Graph Connectors"
+        },
+        {
+          "id": "firewall-audit",
+          "name": "Firewall Audit"
+        },
+        {
+          "id": "certificate-mgmt",
+          "name": "Certificate Mgmt"
+        },
+        {
+          "id": "tag-governance",
+          "name": "Tag Governance"
+        },
+        {
+          "id": "agent-client-collector",
+          "name": "Agent Client Collector"
+        },
+        {
+          "id": "event-mgmt",
+          "name": "Event Mgmt"
+        },
+        {
+          "id": "metric-intelligence",
+          "name": "Metric Intelligence"
+        },
+        {
+          "id": "predictive-aiops",
+          "name": "Predictive AIops"
+        },
+        {
+          "id": "health-log-analytics",
+          "name": "Health Log Analytics"
+        },
+        {
+          "id": "service-observability",
+          "name": "Service Observability"
+        },
+        {
+          "id": "synthetic-monitoring",
+          "name": "Synthetic Monitoring"
+        },
+        {
+          "id": "cloud-workspace",
+          "name": "Cloud Workspace"
+        },
+        {
+          "id": "cloud-account-mgmt",
+          "name": "Cloud Account Mgmt"
+        },
+        {
+          "id": "now-assist-for-itom",
+          "name": "Now Assist for ITOM"
+        },
+        {
+          "id": "now-assist-for-cmdb",
+          "name": "Now Assist for CMDB"
+        }
+      ]
+    },
+    {
+      "id": "sam",
+      "name": "SAM",
+      "layer": "solution",
+      "displayOrder": 15,
+      "capabilities": [
+        {
+          "id": "software-asset-mgmt",
+          "name": "Software Asset Mgmt"
+        },
+        {
+          "id": "saas-license-mgmt",
+          "name": "SaaS License Mgmt"
+        },
+        {
+          "id": "software-spend-detection",
+          "name": "Software Spend Detection"
+        },
+        {
+          "id": "cloud-cost-mgmt",
+          "name": "Cloud Cost Mgmt"
+        },
+        {
+          "id": "now-assist-for-sam",
+          "name": "Now Assist for SAM"
+        }
+      ]
+    },
+    {
+      "id": "operational-technology",
+      "name": "Operational Technology",
+      "layer": "solution",
+      "displayOrder": 16,
+      "capabilities": [
+        {
+          "id": "ot-visibility",
+          "name": "OT Visibility"
+        },
+        {
+          "id": "ot-vulnerability-response",
+          "name": "OT Vulnerability Response"
+        },
+        {
+          "id": "ot-service-mgmt",
+          "name": "OT Service Mgmt"
+        },
+        {
+          "id": "ot-asset-mgmt",
+          "name": "OT Asset Mgmt"
+        },
+        {
+          "id": "ot-health",
+          "name": "OT Health"
+        }
+      ]
     },
     {
       "id": "operational-sustainability-mgmt-esg",
       "name": "Operational Sustainability Mgmt (ESG)",
       "layer": "solution",
-      "displayOrder": 32
+      "displayOrder": 17,
+      "capabilities": [
+        {
+          "id": "osm-mgmt",
+          "name": "OSM Mgmt"
+        },
+        {
+          "id": "osm-risk-mgmt",
+          "name": "OSM Risk Mgmt"
+        },
+        {
+          "id": "scope-3-emission-mgmt",
+          "name": "Scope 3 Emission Mgmt"
+        },
+        {
+          "id": "osm-reporting",
+          "name": "OSM Reporting"
+        }
+      ]
+    },
+    {
+      "id": "eam",
+      "name": "EAM",
+      "layer": "solution",
+      "displayOrder": 18,
+      "capabilities": [
+        {
+          "id": "enterprise-asset-mgmt",
+          "name": "Enterprise Asset Mgmt"
+        },
+        {
+          "id": "asset-mgmt-2",
+          "name": "Asset Mgmt"
+        },
+        {
+          "id": "planned-maintenance-2",
+          "name": "Planned Maintenance"
+        },
+        {
+          "id": "now-assist-for-eam",
+          "name": "Now Assist for EAM"
+        }
+      ]
+    },
+    {
+      "id": "irm",
+      "name": "IRM",
+      "layer": "solution",
+      "displayOrder": 19,
+      "capabilities": [
+        {
+          "id": "policy-and-compliance-mgmt",
+          "name": "Policy & Compliance Mgmt"
+        },
+        {
+          "id": "risk-mgmt",
+          "name": "Risk Mgmt"
+        },
+        {
+          "id": "audit-mgmt",
+          "name": "Audit Mgmt"
+        },
+        {
+          "id": "ai-risk-and-compliance-mgmt",
+          "name": "AI Risk and Compliance Mgmt"
+        },
+        {
+          "id": "now-assist-for-irm",
+          "name": "Now Assist for IRM"
+        }
+      ]
+    },
+    {
+      "id": "sir",
+      "name": "SIR",
+      "layer": "solution",
+      "displayOrder": 20,
+      "capabilities": [
+        {
+          "id": "security-incident-response",
+          "name": "Security Incident Response"
+        },
+        {
+          "id": "threat-intelligence",
+          "name": "Threat Intelligence"
+        },
+        {
+          "id": "event-mgmt-for-security-operations",
+          "name": "Event Mgmt for Security Operations"
+        },
+        {
+          "id": "major-security-incident-mgmt",
+          "name": "Major Security Incident Mgmt"
+        },
+        {
+          "id": "now-assist-for-sir",
+          "name": "Now Assist for SIR"
+        }
+      ]
+    },
+    {
+      "id": "vulnerability-response-usem",
+      "name": "Vulnerability Response (USEM)",
+      "layer": "solution",
+      "displayOrder": 21,
+      "capabilities": [
+        {
+          "id": "vulnerability-response",
+          "name": "Vulnerability Response"
+        },
+        {
+          "id": "vulnerability-solution-mgmt",
+          "name": "Vulnerability Solution Mgmt"
+        },
+        {
+          "id": "vulnerability-crisis-mgmt",
+          "name": "Vulnerability Crisis Mgmt"
+        },
+        {
+          "id": "app-vulnerability-response",
+          "name": "App Vulnerability Response"
+        },
+        {
+          "id": "patch-orchestration",
+          "name": "Patch Orchestration"
+        },
+        {
+          "id": "now-assist-for-vr",
+          "name": "Now Assist for VR"
+        }
+      ]
+    },
+    {
+      "id": "privacy-mgmt",
+      "name": "Privacy Mgmt",
+      "layer": "solution",
+      "displayOrder": 22,
+      "capabilities": [
+        {
+          "id": "privacy-mgmt-2",
+          "name": "Privacy Mgmt"
+        },
+        {
+          "id": "privacy-case-mgmt",
+          "name": "Privacy Case Mgmt"
+        },
+        {
+          "id": "policy-and-compliance-mgmt-2",
+          "name": "Policy and Compliance Mgmt"
+        }
+      ]
+    },
+    {
+      "id": "tprm",
+      "name": "TPRM",
+      "layer": "solution",
+      "displayOrder": 23,
+      "capabilities": [
+        {
+          "id": "third-party-risk-mgmt",
+          "name": "Third-party Risk Mgmt"
+        },
+        {
+          "id": "third-party-portal",
+          "name": "Third-party Portal"
+        },
+        {
+          "id": "smart-assessment-engine",
+          "name": "Smart Assessment Engine"
+        }
+      ]
     },
     {
       "id": "bcm",
       "name": "BCM",
       "layer": "solution",
-      "displayOrder": 33
+      "displayOrder": 24,
+      "capabilities": [
+        {
+          "id": "business-continuity-planning",
+          "name": "Business Continuity Planning"
+        },
+        {
+          "id": "business-impact-analysis",
+          "name": "Business Impact Analysis"
+        },
+        {
+          "id": "crisis-mgmt",
+          "name": "Crisis Mgmt"
+        },
+        {
+          "id": "bcm-mobile-app",
+          "name": "BCM Mobile app"
+        }
+      ]
     },
     {
-      "id": "sense",
-      "name": "SENSE",
-      "layer": "platform",
-      "aiNativePillar": "sense",
-      "displayOrder": 34
+      "id": "hr-service-delivery",
+      "name": "HR Service Delivery",
+      "layer": "solution",
+      "displayOrder": 25,
+      "capabilities": [
+        {
+          "id": "hr-case-and-knowledge-mgmt",
+          "name": "HR Case and Knowledge Mgmt"
+        },
+        {
+          "id": "hr-agent-workspace",
+          "name": "HR Agent Workspace"
+        },
+        {
+          "id": "employee-journey-mgmt",
+          "name": "Employee Journey Mgmt"
+        },
+        {
+          "id": "employee-center-pro",
+          "name": "Employee Center Pro"
+        },
+        {
+          "id": "talent",
+          "name": "Talent"
+        },
+        {
+          "id": "ent-onboarding-and-transitions",
+          "name": "Ent. Onboarding & Transitions"
+        }
+      ]
     },
     {
-      "id": "decide",
-      "name": "DECIDE",
-      "layer": "platform",
-      "aiNativePillar": "decide",
-      "displayOrder": 35
+      "id": "workplace-service-delivery",
+      "name": "Workplace Service Delivery",
+      "layer": "solution",
+      "displayOrder": 26,
+      "capabilities": [
+        {
+          "id": "workplace-case-mgmt",
+          "name": "Workplace Case Mgmt"
+        },
+        {
+          "id": "workplace-reservation",
+          "name": "Workplace Reservation"
+        },
+        {
+          "id": "workplace-space-mapping",
+          "name": "Workplace Space Mapping"
+        },
+        {
+          "id": "workplace-visitor-mgmt",
+          "name": "Workplace Visitor Mgmt"
+        },
+        {
+          "id": "workplace-indoor-mapping",
+          "name": "Workplace Indoor Mapping"
+        }
+      ]
     },
     {
-      "id": "act",
-      "name": "ACT",
-      "layer": "platform",
-      "aiNativePillar": "act",
-      "displayOrder": 36
+      "id": "sourcing-and-procurement-ops",
+      "name": "Sourcing & Procurement Ops",
+      "layer": "solution",
+      "displayOrder": 27,
+      "capabilities": [
+        {
+          "id": "procurement-case-mgmt",
+          "name": "Procurement Case Mgmt"
+        },
+        {
+          "id": "invoice-case-mgmt",
+          "name": "Invoice Case Mgmt"
+        },
+        {
+          "id": "shoppinghub",
+          "name": "ShoppingHub"
+        },
+        {
+          "id": "sourcing-and-purchasing-auto",
+          "name": "Sourcing and Purchasing Auto"
+        },
+        {
+          "id": "supplier-collaboration-portal",
+          "name": "Supplier Collaboration Portal"
+        },
+        {
+          "id": "supplier-onboarding",
+          "name": "Supplier Onboarding"
+        },
+        {
+          "id": "accounts-payable-invoice-processing",
+          "name": "Accounts Payable Invoice Processing"
+        }
+      ]
     },
     {
-      "id": "secure",
-      "name": "SECURE",
-      "layer": "platform",
-      "aiNativePillar": "secure",
-      "displayOrder": 37
+      "id": "health-and-safety",
+      "name": "Health & Safety",
+      "layer": "solution",
+      "displayOrder": 28,
+      "capabilities": [
+        {
+          "id": "health-and-safety-case-mgmt",
+          "name": "Health and Safety Case Mgmt"
+        },
+        {
+          "id": "critical-event-mgmt",
+          "name": "Critical Event Mgmt"
+        },
+        {
+          "id": "health-and-safety-incident-mgmt",
+          "name": "Health and Safety Incident Mgmt"
+        },
+        {
+          "id": "health-and-safety-risk-mgmt",
+          "name": "Health and Safety Risk Mgmt"
+        }
+      ]
     },
     {
-      "id": "ai-control-tower-band",
+      "id": "legal-service-delivery",
+      "name": "Legal Service Delivery",
+      "layer": "solution",
+      "displayOrder": 29,
+      "capabilities": [
+        {
+          "id": "legal-request-mgmt",
+          "name": "Legal Request Mgmt"
+        },
+        {
+          "id": "legal-matter-mgmt",
+          "name": "Legal Matter Mgmt"
+        }
+      ]
+    },
+    {
+      "id": "ai-control-tower",
       "name": "AI Control Tower",
-      "layer": "ai-native",
-      "displayOrder": 38
-    }
-  ],
-  "capabilities": [
-    {
-      "id": "order-mgmt",
-      "name": "Order Mgmt",
-      "categoryId": "cpq-sales-crm"
-    },
-    {
-      "id": "work-order-mgmt",
-      "name": "Work Order Mgmt",
-      "categoryId": "fsm"
-    },
-    {
-      "id": "financial-service-data-model",
-      "name": "Financial Service Data Model",
-      "categoryId": "fso"
-    },
-    {
-      "id": "enterprise-modeling-and-visualization",
-      "name": "Enterprise Modeling & Visualization",
-      "categoryId": "ea"
-    },
-    {
-      "id": "incident-mgmt",
-      "name": "Incident Mgmt",
-      "categoryId": "itsm"
-    },
-    {
-      "id": "discovery",
-      "name": "Discovery",
-      "categoryId": "itom"
-    },
-    {
-      "id": "software-asset-mgmt",
-      "name": "Software Asset Mgmt",
-      "categoryId": "sam"
-    },
-    {
-      "id": "enterprise-asset-mgmt",
-      "name": "Enterprise Asset Mgmt",
-      "categoryId": "eam"
-    },
-    {
-      "id": "policy-and-compliance-mgmt",
-      "name": "Policy & Compliance Mgmt",
-      "categoryId": "irm"
-    },
-    {
-      "id": "service-mapping",
-      "name": "Service Mapping",
-      "categoryId": "itom"
-    },
-    {
-      "id": "problem-mgmt",
-      "name": "Problem Mgmt",
-      "categoryId": "itsm"
-    },
-    {
-      "id": "order-operations",
-      "name": "Order Operations",
-      "categoryId": "cpq-sales-crm"
-    },
-    {
-      "id": "advanced-dispatching",
-      "name": "Advanced Dispatching",
-      "categoryId": "fsm"
-    },
-    {
-      "id": "asset-mgmt",
-      "name": "Asset Mgmt",
-      "categoryId": "eam"
-    },
-    {
-      "id": "application-rationalization",
-      "name": "Application Rationalization",
-      "categoryId": "ea"
-    },
-    {
-      "id": "payment-operations",
-      "name": "Payment Operations",
-      "categoryId": "fso"
-    },
-    {
-      "id": "saas-license-mgmt",
-      "name": "SaaS License Mgmt",
-      "categoryId": "sam"
-    },
-    {
-      "id": "risk-mgmt",
-      "name": "Risk Mgmt",
-      "categoryId": "irm"
-    },
-    {
-      "id": "hr-case-and-knowledge-mgmt",
-      "name": "HR Case and Knowledge Mgmt",
-      "categoryId": "hr-service-delivery"
-    },
-    {
-      "id": "workplace-case-mgmt",
-      "name": "Workplace Case Mgmt",
-      "categoryId": "workplace-service-delivery"
-    },
-    {
-      "id": "health-and-safety-case-mgmt",
-      "name": "Health and Safety Case Mgmt",
-      "categoryId": "health-and-safety"
-    },
-    {
-      "id": "procurement-case-mgmt",
-      "name": "Procurement Case Mgmt",
-      "categoryId": "sourcing-and-procurement-ops"
-    },
-    {
-      "id": "service-graph-connectors",
-      "name": "Service Graph Connectors",
-      "categoryId": "itom"
-    },
-    {
-      "id": "change-mgmt",
-      "name": "Change Mgmt",
-      "categoryId": "itsm"
-    },
-    {
-      "id": "cpq-core",
-      "name": "CPQ Core",
-      "categoryId": "cpq-sales-crm"
-    },
-    {
-      "id": "planned-maintenance",
-      "name": "Planned Maintenance",
-      "categoryId": "sir"
-    },
-    {
-      "id": "planned-maintenance-2",
-      "name": "Planned Maintenance",
-      "categoryId": "fsm"
-    },
-    {
-      "id": "audit-mgmt",
-      "name": "Audit Mgmt",
-      "categoryId": "irm"
-    },
-    {
-      "id": "technology-portfolio-mgmt",
-      "name": "Technology Portfolio Mgmt",
-      "categoryId": "ea"
-    },
-    {
-      "id": "card-operations",
-      "name": "Card Operations",
-      "categoryId": "fso"
-    },
-    {
-      "id": "software-spend-detection",
-      "name": "Software Spend Detection",
-      "categoryId": "sam"
-    },
-    {
-      "id": "workplace-reservation",
-      "name": "Workplace Reservation",
-      "categoryId": "workplace-service-delivery"
-    },
-    {
-      "id": "critical-event-mgmt",
-      "name": "Critical Event Mgmt",
-      "categoryId": "health-and-safety"
-    },
-    {
-      "id": "hr-agent-workspace",
-      "name": "HR Agent Workspace",
-      "categoryId": "hr-service-delivery"
-    },
-    {
-      "id": "invoice-case-mgmt",
-      "name": "Invoice Case Mgmt",
-      "categoryId": "sourcing-and-procurement-ops"
-    },
-    {
-      "id": "request-mgmt",
-      "name": "Request Mgmt",
-      "categoryId": "itsm"
-    },
-    {
-      "id": "lead-mgmt-core",
-      "name": "Lead Mgmt Core",
-      "categoryId": "csm"
-    },
-    {
-      "id": "firewall-audit",
-      "name": "Firewall Audit",
-      "categoryId": "itom"
-    },
-    {
-      "id": "ai-risk-and-compliance-mgmt",
-      "name": "AI Risk and Compliance Mgmt",
-      "categoryId": "privacy-mgmt"
-    },
-    {
-      "id": "now-assist-for-eam",
-      "name": "Now Assist for EAM",
-      "categoryId": "sir"
-    },
-    {
-      "id": "dispute-mgmt",
-      "name": "Dispute Mgmt",
-      "categoryId": "fso"
-    },
-    {
-      "id": "planned-work-mgmt",
-      "name": "Planned Work Mgmt",
-      "categoryId": "healthcare-and-life-sciences"
-    },
-    {
-      "id": "bus-application-inventory",
-      "name": "Bus Application Inventory",
-      "categoryId": "ea"
-    },
-    {
-      "id": "cloud-cost-mgmt",
-      "name": "Cloud Cost Mgmt",
-      "categoryId": "operational-technology"
-    },
-    {
-      "id": "shoppinghub",
-      "name": "ShoppingHub",
-      "categoryId": "sourcing-and-procurement-ops"
-    },
-    {
-      "id": "workplace-space-mapping",
-      "name": "Workplace Space Mapping",
-      "categoryId": "workplace-service-delivery"
-    },
-    {
-      "id": "health-and-safety-incident-mgmt",
-      "name": "Health and Safety Incident Mgmt",
-      "categoryId": "legal-service-delivery"
-    },
-    {
-      "id": "employee-journey-mgmt",
-      "name": "Employee Journey Mgmt",
-      "categoryId": "hr-service-delivery"
-    },
-    {
-      "id": "asset-mgmt-2",
-      "name": "Asset Mgmt",
-      "categoryId": "itsm"
-    },
-    {
-      "id": "opportunity-mgmt-core",
-      "name": "Opportunity Mgmt Core",
-      "categoryId": "csm"
-    },
-    {
-      "id": "certificate-mgmt",
-      "name": "Certificate Mgmt",
-      "categoryId": "itom"
-    },
-    {
-      "id": "contract-mgmt",
-      "name": "Contract Mgmt",
-      "categoryId": "healthcare-and-life-sciences"
-    },
-    {
-      "id": "loan-operations",
-      "name": "Loan Operations",
-      "categoryId": "manufacturing"
-    },
-    {
-      "id": "now-assist-for-irm",
-      "name": "Now Assist for IRM",
-      "categoryId": "privacy-mgmt"
-    },
-    {
-      "id": "now-assist-for-sam",
-      "name": "Now Assist for SAM",
-      "categoryId": "operational-technology"
-    },
-    {
-      "id": "digital-integration-mgmt",
-      "name": "Digital Integration Mgmt",
-      "categoryId": "spm"
-    },
-    {
-      "id": "sourcing-and-purchasing-auto",
-      "name": "Sourcing and Purchasing Auto",
-      "categoryId": "sourcing-and-procurement-ops"
-    },
-    {
-      "id": "continual-improvement",
-      "name": "Continual Improvement",
-      "categoryId": "itsm"
-    },
-    {
-      "id": "marketing-by-tenon",
-      "name": "Marketing by Tenon",
-      "categoryId": "csm"
-    },
-    {
-      "id": "workspace-visitor-mgmt",
-      "name": "Workspace Visitor Mgmt",
-      "categoryId": "workplace-service-delivery"
-    },
-    {
-      "id": "health-and-safety-risk-mgmt",
-      "name": "Health and Safety Risk Mgmt",
-      "categoryId": "legal-service-delivery"
-    },
-    {
-      "id": "employee-center-pro",
-      "name": "Employee Center Pro",
-      "categoryId": "hr-service-delivery"
-    },
-    {
-      "id": "tag-governance",
-      "name": "Tag Governance",
-      "categoryId": "operational-technology"
-    },
-    {
-      "id": "now-assist-for-fsm",
-      "name": "Now Assist for FSM",
-      "categoryId": "healthcare-and-life-sciences"
-    },
-    {
-      "id": "deposit-operations",
-      "name": "Deposit Operations",
-      "categoryId": "manufacturing"
-    },
-    {
-      "id": "business-capabilitymgmt",
-      "name": "Business CapabilityMgmt",
-      "categoryId": "spm"
-    },
-    {
-      "id": "supplier-collaboration-portal",
-      "name": "Supplier Collaboration Portal",
-      "categoryId": "legal-service-delivery"
-    },
-    {
-      "id": "talent",
-      "name": "Talent",
-      "categoryId": "privacy-mgmt"
-    },
-    {
-      "id": "agent-client-collector",
-      "name": "Agent Client Collector",
-      "categoryId": "operational-technology"
-    },
-    {
-      "id": "digital-portfolio-mgmt",
-      "name": "Digital Portfolio Mgmt",
-      "categoryId": "spm"
-    },
-    {
-      "id": "workplace-indoor-mapping",
-      "name": "Workplace Indoor Mapping",
-      "categoryId": "veza-from-servicenow"
-    },
-    {
-      "id": "security-incident-response",
-      "name": "Security Incident Response",
-      "categoryId": "sir"
-    },
-    {
-      "id": "treasury-operations",
-      "name": "Treasury Operations",
-      "categoryId": "manufacturing"
-    },
-    {
-      "id": "ent-onboarding-and-transitions",
-      "name": "Ent. Onboarding & Transitions",
-      "categoryId": "ai-control-tower"
-    },
-    {
-      "id": "supplier-onboarding",
-      "name": "Supplier Onboarding",
-      "categoryId": "legal-service-delivery"
-    },
-    {
-      "id": "now-assist-for-ea",
-      "name": "Now Assist for EA",
-      "categoryId": "spm"
-    },
-    {
-      "id": "digital-product-release",
-      "name": "Digital Product Release",
-      "categoryId": "spm"
-    },
-    {
-      "id": "event-mgmt",
-      "name": "Event Mgmt",
-      "categoryId": "operational-technology"
-    },
-    {
-      "id": "privacy-mgmt-2",
-      "name": "Privacy Mgmt",
-      "categoryId": "privacy-mgmt"
-    },
-    {
-      "id": "now-assist-for-fso",
-      "name": "Now Assist for FSO",
-      "categoryId": "manufacturing"
-    },
-    {
-      "id": "customer-case-mgmt",
-      "name": "Customer Case Mgmt",
-      "categoryId": "csm"
-    },
-    {
-      "id": "threat-intelligence",
-      "name": "Threat Intelligence",
-      "categoryId": "sir"
-    },
-    {
-      "id": "accounts-payable-invoice-processing",
-      "name": "Accounts Payable Invoice Processing",
-      "categoryId": "armis-from-servicenow"
-    },
-    {
-      "id": "metric-intelligence",
-      "name": "Metric Intelligence",
-      "categoryId": "operational-technology"
-    },
-    {
-      "id": "privacy-case-mgmt",
-      "name": "Privacy Case Mgmt",
-      "categoryId": "privacy-mgmt"
-    },
-    {
-      "id": "itsm-success-dashboard",
-      "name": "ITSM Success Dashboard",
-      "categoryId": "spm"
-    },
-    {
-      "id": "legal-request-mgmt",
-      "name": "Legal Request Mgmt",
-      "categoryId": "legal-service-delivery"
-    },
-    {
-      "id": "ot-visibility",
-      "name": "OT Visibility",
-      "categoryId": "operational-technology"
-    },
-    {
-      "id": "event-mgmt-for-security-operations",
-      "name": "Event Mgmt for Security Operations",
-      "categoryId": "sir"
-    },
-    {
-      "id": "engagement-messenger",
-      "name": "Engagement Messenger",
-      "categoryId": "csm"
-    },
-    {
-      "id": "hcls-applications",
-      "name": "HCLS Applications",
-      "categoryId": "healthcare-and-life-sciences"
-    },
-    {
-      "id": "predictive-aiops",
-      "name": "Predictive AIOps",
-      "categoryId": "operational-technology"
-    },
-    {
-      "id": "policy-and-compliance-mgmt-2",
-      "name": "Policy and Compliance Mgmt",
-      "categoryId": "tprm"
-    },
-    {
-      "id": "ot-vulnerability-response",
-      "name": "OT Vulnerability Response",
-      "categoryId": "operational-technology"
-    },
-    {
-      "id": "now-assist-for-itsm",
-      "name": "Now Assist for ITSM",
-      "categoryId": "ham"
-    },
-    {
-      "id": "mco-applications",
-      "name": "MCO Applications",
-      "categoryId": "manufacturing"
-    },
-    {
-      "id": "legal-matter-mgmt",
-      "name": "Legal Matter Mgmt",
-      "categoryId": "legal-service-delivery"
-    },
-    {
-      "id": "major-security-incident-mgmt",
-      "name": "Major Security Incident Mgmt",
-      "categoryId": "vulnerability-response-usem"
-    },
-    {
-      "id": "customer-service-portal",
-      "name": "Customer Service Portal",
-      "categoryId": "csm"
-    },
-    {
-      "id": "hcls-core",
-      "name": "HCLS Core",
-      "categoryId": "healthcare-and-life-sciences"
-    },
-    {
-      "id": "health-log-analytics",
-      "name": "Health Log Analytics",
-      "categoryId": "operational-technology"
-    },
-    {
-      "id": "roadmap-planning",
-      "name": "Roadmap Planning",
-      "categoryId": "spm"
-    },
-    {
-      "id": "digital-end-user-experience",
-      "name": "Digital End-User Experience",
-      "categoryId": "ham"
-    },
-    {
-      "id": "mco-applications-2",
-      "name": "MCO Applications",
-      "categoryId": "manufacturing"
-    },
-    {
-      "id": "ot-service-mgmt",
-      "name": "OT Service Mgmt",
-      "categoryId": "operational-technology"
-    },
-    {
-      "id": "now-assist-for-sir",
-      "name": "Now Assist for SIR",
-      "categoryId": "vulnerability-response-usem"
-    },
-    {
-      "id": "walk-up-experience",
-      "name": "Walk-up Experience",
-      "categoryId": "tpsm"
-    },
-    {
-      "id": "csm-2",
-      "name": "CSM",
-      "categoryId": "healthcare-and-life-sciences"
-    },
-    {
-      "id": "service-observability",
-      "name": "Service Observability",
-      "categoryId": "ham"
-    },
-    {
-      "id": "demand-mgmt",
-      "name": "Demand Mgmt",
-      "categoryId": "spm"
-    },
-    {
-      "id": "csm-3",
-      "name": "CSM",
-      "categoryId": "manufacturing"
-    },
-    {
-      "id": "ot-asset-mgmt",
-      "name": "OT Asset Mgmt",
-      "categoryId": "operational-sustainability-mgmt-esg"
-    },
-    {
-      "id": "itsm-2",
-      "name": "ITSM",
-      "categoryId": "retail-service-mgmt"
-    },
-    {
-      "id": "now-assist-for-csm",
-      "name": "Now Assist for CSM",
-      "categoryId": "tpsm"
-    },
-    {
-      "id": "project-portfolio-mgmt",
-      "name": "Project Portfolio Mgmt",
-      "categoryId": "spm"
-    },
-    {
-      "id": "synthetic-monitoring",
-      "name": "Synthetic Monitoring",
-      "categoryId": "ham"
-    },
-    {
-      "id": "itsm-3",
-      "name": "ITSM",
-      "categoryId": "public-sector"
-    },
-    {
-      "id": "ot-health",
-      "name": "OT Health",
-      "categoryId": "operational-sustainability-mgmt-esg"
-    },
-    {
-      "id": "third-party-risk-mgmt",
-      "name": "Third-party Risk Mgmt",
-      "categoryId": "tprm"
-    },
-    {
-      "id": "now-assist-for-care-team-operations",
-      "name": "Now Assist for Care Team Operations",
-      "categoryId": "retail-service-mgmt"
-    },
-    {
-      "id": "now-assist-for-mco",
-      "name": "Now Assist for MCO",
-      "categoryId": "public-sector"
-    },
-    {
-      "id": "resource-mgmt",
-      "name": "Resource Mgmt",
-      "categoryId": "spm"
-    },
-    {
-      "id": "cloud-workspace",
-      "name": "Cloud Workspace",
-      "categoryId": "ham"
-    },
-    {
-      "id": "veza-ai-agent-security",
-      "name": "Veza AI Agent Security",
-      "categoryId": "veza-from-servicenow"
-    },
-    {
-      "id": "asset-mgmt-and-security",
-      "name": "Asset Mgmt & Security",
-      "categoryId": "armis-from-servicenow"
-    },
-    {
-      "id": "app-engine",
-      "name": "App Engine",
-      "categoryId": "app-development"
-    },
-    {
-      "id": "third-party-portal",
-      "name": "Third-party Portal",
-      "categoryId": "tprm"
-    },
-    {
-      "id": "ai-control-tower-for-enterprise-ai",
-      "name": "AI Control Tower for Enterprise AI",
-      "categoryId": "ai-control-tower"
-    },
-    {
-      "id": "hardware-asset-mgmt",
-      "name": "Hardware Asset Mgmt",
-      "categoryId": "ham"
-    },
-    {
-      "id": "investment-funding",
-      "name": "Investment Funding",
-      "categoryId": "public-sector"
-    },
-    {
-      "id": "cloud-account-mgmt",
-      "name": "Cloud Account Mgmt",
-      "categoryId": "ham"
-    },
-    {
-      "id": "servicenow-studio",
-      "name": "ServiceNow Studio",
-      "categoryId": "app-development"
-    },
-    {
-      "id": "smart-assessment-engine",
-      "name": "Smart Assessment Engine",
-      "categoryId": "bcm"
-    },
-    {
-      "id": "threat-intelligence-2",
-      "name": "Threat Intelligence",
-      "categoryId": "armis-from-servicenow"
-    },
-    {
-      "id": "veza-access-intelligence",
-      "name": "Veza Access Intelligence",
-      "categoryId": "veza-from-servicenow"
-    },
-    {
-      "id": "telco-and-tech-provider-service-mgmt",
-      "name": "Telco & Tech. Provider Service Mgmt",
-      "categoryId": "tpsm"
-    },
-    {
-      "id": "vulnerability-response",
-      "name": "Vulnerability Response",
-      "categoryId": "vulnerability-response-usem"
-    },
-    {
-      "id": "ai-risk-and-compliance-mgmt-2",
-      "name": "AI Risk and Compliance Mgmt",
-      "categoryId": "ai-control-tower"
-    },
-    {
-      "id": "agile-development",
-      "name": "Agile Development",
-      "categoryId": "public-sector"
-    },
-    {
-      "id": "now-assist-for-itom",
-      "name": "Now Assist for ITOM",
-      "categoryId": "operational-sustainability-mgmt-esg"
-    },
-    {
-      "id": "hardware-asset-lifecycle-mgmt",
-      "name": "Hardware Asset Lifecycle Mgmt",
-      "categoryId": "ham"
-    },
-    {
-      "id": "psds-applications",
-      "name": "PSDS Applications",
-      "categoryId": "public-sector"
-    },
-    {
-      "id": "now-assist-for-app-engine",
-      "name": "Now Assist for App Engine",
-      "categoryId": "app-development"
-    },
-    {
-      "id": "ot-iot-security",
-      "name": "OT, IOT Security",
-      "categoryId": "armis-from-servicenow"
-    },
-    {
-      "id": "veza-access-visibility",
-      "name": "Veza Access Visibility",
-      "categoryId": "veza-from-servicenow"
-    },
-    {
-      "id": "vulnerability-solution-mgmt",
-      "name": "Vulnerability Solution Mgmt",
-      "categoryId": "vulnerability-response-usem"
-    },
-    {
-      "id": "ai-case-mgmt",
-      "name": "AI Case Mgmt",
-      "categoryId": "ai-control-tower"
-    },
-    {
-      "id": "innovation-mgmt",
-      "name": "Innovation Mgmt",
-      "categoryId": "public-sector"
-    },
-    {
-      "id": "now-assist-for-cmdb",
-      "name": "Now Assist for CMDB",
-      "categoryId": "operational-sustainability-mgmt-esg"
-    },
-    {
-      "id": "psds-core",
-      "name": "PSDS Core",
-      "categoryId": "public-sector"
-    },
-    {
-      "id": "hardware-asset-reservation",
-      "name": "Hardware Asset Reservation",
-      "categoryId": "ham"
-    },
-    {
-      "id": "retail-core",
-      "name": "Retail Core",
-      "categoryId": "retail-service-mgmt"
-    },
-    {
-      "id": "csm-4",
-      "name": "CSM",
-      "categoryId": "tpsm"
-    },
-    {
-      "id": "medical-device-security",
-      "name": "Medical device Security",
-      "categoryId": "armis-from-servicenow"
-    },
-    {
-      "id": "creator-studio",
-      "name": "Creator Studio",
-      "categoryId": "app-development"
-    },
-    {
-      "id": "use-case-accelerators",
-      "name": "Use Case Accelerators",
-      "categoryId": "ai-control-tower"
-    },
-    {
-      "id": "osm-mgmt",
-      "name": "OSM Mgmt",
-      "categoryId": "operational-sustainability-mgmt-esg"
-    },
-    {
-      "id": "now-assist-for-spm",
-      "name": "Now Assist for SPM",
-      "categoryId": "public-sector"
-    },
-    {
-      "id": "veza-access-monitoring",
-      "name": "Veza Access Monitoring",
-      "categoryId": "veza-from-servicenow"
-    },
-    {
-      "id": "vulnerability-crisis-mgmt",
-      "name": "Vulnerability Crisis Mgmt",
-      "categoryId": "vulnerability-response-usem"
-    },
-    {
-      "id": "constituent-experience",
-      "name": "Constituent Experience",
-      "categoryId": "public-sector"
-    },
-    {
-      "id": "retail-applications",
-      "name": "Retail Applications",
-      "categoryId": "retail-service-mgmt"
-    },
-    {
-      "id": "hardware-content-library",
-      "name": "Hardware Content Library",
-      "categoryId": "ham"
-    },
-    {
-      "id": "itsm-4",
-      "name": "ITSM",
-      "categoryId": "tpsm"
-    },
-    {
-      "id": "now-assist-for-creator",
-      "name": "Now Assist for Creator",
-      "categoryId": "app-development"
-    },
-    {
-      "id": "vipr-pro-prioritization-and-remediation",
-      "name": "VIPR Pro – Prioritization & Remediation",
-      "categoryId": "armis-from-servicenow"
-    },
-    {
-      "id": "business-continuity-planning",
-      "name": "Business Continuity Planning",
-      "categoryId": "bcm"
-    },
-    {
-      "id": "osm-risk-mgmt",
-      "name": "OSM Risk Mgmt",
-      "categoryId": "operational-sustainability-mgmt-esg"
-    },
-    {
-      "id": "aict-enterprise-ai-assets",
-      "name": "AICT – Enterprise AI Assets",
-      "categoryId": "bcm"
-    },
-    {
-      "id": "app-vulnerability-response",
-      "name": "App Vulnerability Response",
-      "categoryId": "bcm"
-    },
-    {
-      "id": "government-agent-experience",
-      "name": "Government agent experience",
-      "categoryId": "public-sector"
-    },
-    {
-      "id": "csm-5",
-      "name": "CSM",
-      "categoryId": "retail-service-mgmt"
-    },
-    {
-      "id": "service-bridge",
-      "name": "Service Bridge",
-      "categoryId": "tpsm"
-    },
-    {
-      "id": "now-assist-for-ham",
-      "name": "Now Assist for HAM",
-      "categoryId": "ham"
-    },
-    {
-      "id": "scope-3-emission-mgmt",
-      "name": "Scope 3 Emission Mgmt",
-      "categoryId": "operational-sustainability-mgmt-esg"
-    },
-    {
-      "id": "business-impact-analysis",
-      "name": "Business Impact Analysis",
-      "categoryId": "bcm"
-    },
-    {
-      "id": "itsm-5",
-      "name": "ITSM",
-      "categoryId": "retail-service-mgmt"
-    },
-    {
-      "id": "vulnerability-mgmt-detection-and-response",
-      "name": "Vulnerability Mgmt Detection & Response",
-      "categoryId": "armis-from-servicenow"
-    },
-    {
-      "id": "patch-orchestration",
-      "name": "Patch Orchestration",
-      "categoryId": "bcm"
-    },
-    {
-      "id": "assurance-workflow",
-      "name": "Assurance Workflow",
-      "categoryId": "tpsm"
-    },
-    {
-      "id": "csm-6",
-      "name": "CSM",
-      "categoryId": "public-sector"
-    },
-    {
-      "id": "osm-reporting",
-      "name": "OSM Reporting",
-      "categoryId": "operational-sustainability-mgmt-esg"
-    },
-    {
-      "id": "crisis-mgmt",
-      "name": "Crisis Mgmt",
-      "categoryId": "bcm"
-    },
-    {
-      "id": "now-assist-for-rsm",
-      "name": "Now Assist for RSM",
-      "categoryId": "retail-service-mgmt"
-    },
-    {
-      "id": "itsm-6",
-      "name": "ITSM",
-      "categoryId": "public-sector"
-    },
-    {
-      "id": "now-assist-for-vr",
-      "name": "Now Assist for VR",
-      "categoryId": "bcm"
-    },
-    {
-      "id": "now-assist-fortmt",
-      "name": "Now Assist forTMT",
-      "categoryId": "tpsm"
-    },
-    {
-      "id": "early-warning",
-      "name": "Early Warning",
-      "categoryId": "armis-from-servicenow"
-    },
-    {
-      "id": "bcm-mobile-app",
-      "name": "BCM Mobile app",
-      "categoryId": "bcm"
-    },
-    {
-      "id": "now-assist-for-psds",
-      "name": "Now Assist for PSDS",
-      "categoryId": "public-sector"
-    },
-    {
-      "id": "cmdb-and-ai-inventory",
-      "name": "CMDB & AI Inventory",
-      "categoryId": "secure"
-    },
-    {
-      "id": "cmdb-csdm",
-      "name": "CMDB / CSDM",
-      "categoryId": "sense"
-    },
-    {
-      "id": "context-engine",
-      "name": "Context Engine",
-      "categoryId": "sense"
-    },
-    {
-      "id": "workflow-studio",
-      "name": "Workflow Studio",
-      "categoryId": "act"
-    },
-    {
-      "id": "flow-designer",
-      "name": "Flow Designer",
-      "categoryId": "act"
-    },
-    {
-      "id": "ai-guardian",
-      "name": "AI Guardian",
-      "categoryId": "secure"
-    },
-    {
-      "id": "ai-skills",
-      "name": "AI Skills",
-      "categoryId": "decide"
-    },
-    {
-      "id": "ai-agent-studio",
-      "name": "AI Agent Studio",
-      "categoryId": "decide"
-    },
-    {
-      "id": "platform-encryption",
-      "name": "Platform Encryption",
-      "categoryId": "secure"
-    },
-    {
-      "id": "raptordb-professional",
-      "name": "RaptorDB Professional",
-      "categoryId": "sense"
-    },
-    {
-      "id": "workflow-data-fabric",
-      "name": "Workflow Data Fabric",
-      "categoryId": "sense"
-    },
-    {
-      "id": "ai-agent-orchestrator",
-      "name": "AI Agent Orchestrator",
-      "categoryId": "act"
-    },
-    {
-      "id": "autonomous-workforce",
-      "name": "Autonomous Workforce",
-      "categoryId": "act"
-    },
-    {
-      "id": "acl-and-roles",
-      "name": "ACL & Roles",
-      "categoryId": "secure"
-    },
-    {
-      "id": "analytics-and-bi",
-      "name": "Analytics & BI",
-      "categoryId": "decide"
-    },
-    {
-      "id": "ai-agent-fabric",
-      "name": "AI Agent Fabric",
-      "categoryId": "decide"
-    },
-    {
-      "id": "vault",
-      "name": "Vault",
-      "categoryId": "secure"
-    },
-    {
-      "id": "zero-copy-connectors",
-      "name": "Zero-Copy Connectors",
-      "categoryId": "sense"
-    },
-    {
-      "id": "external-content-connector",
-      "name": "External Content Connector",
-      "categoryId": "sense"
-    },
-    {
-      "id": "app-engine-2",
-      "name": "App Engine",
-      "categoryId": "act"
-    },
-    {
-      "id": "build-agent",
-      "name": "Build Agent",
-      "categoryId": "act"
-    },
-    {
-      "id": "domain-separation",
-      "name": "Domain Separation",
-      "categoryId": "secure"
-    },
-    {
-      "id": "knowledge-center",
-      "name": "Knowledge Center",
-      "categoryId": "decide"
-    },
-    {
-      "id": "ai-models",
-      "name": "AI Models",
-      "categoryId": "decide"
-    },
-    {
-      "id": "deny-unless",
-      "name": "Deny Unless",
-      "categoryId": "secure"
-    },
-    {
-      "id": "mcp-and-a2a",
-      "name": "MCP & A2A",
-      "categoryId": "sense"
-    },
-    {
-      "id": "data-catalog",
-      "name": "Data Catalog",
-      "categoryId": "sense"
-    },
-    {
-      "id": "servicenow-studio-2",
-      "name": "ServiceNow Studio",
-      "categoryId": "act"
-    },
-    {
-      "id": "integration-hub",
-      "name": "Integration Hub",
-      "categoryId": "act"
-    },
-    {
-      "id": "ldap-integration",
-      "name": "LDAP Integration",
-      "categoryId": "secure"
-    },
-    {
-      "id": "document-intelligence",
-      "name": "Document Intelligence",
-      "categoryId": "decide"
-    },
-    {
-      "id": "knowledge-graph",
-      "name": "Knowledge Graph",
-      "categoryId": "decide"
-    },
-    {
-      "id": "security-center",
-      "name": "Security Center",
-      "categoryId": "secure"
-    },
-    {
-      "id": "service-catalog",
-      "name": "Service Catalog",
-      "categoryId": "sense"
-    },
-    {
-      "id": "platform-analytics",
-      "name": "Platform Analytics",
-      "categoryId": "sense"
-    },
-    {
-      "id": "agentic-playbooks",
-      "name": "Agentic Playbooks",
-      "categoryId": "act"
-    },
-    {
-      "id": "action-fabric",
-      "name": "Action Fabric",
-      "categoryId": "act"
-    },
-    {
-      "id": "platform-security",
-      "name": "Platform Security",
-      "categoryId": "secure"
-    },
-    {
-      "id": "ai-agent-advisor",
-      "name": "AI Agent Advisor",
-      "categoryId": "decide"
-    },
-    {
-      "id": "decision-builder",
-      "name": "Decision Builder",
-      "categoryId": "decide"
-    },
-    {
-      "id": "process-mining",
-      "name": "Process Mining",
-      "categoryId": "sense"
-    },
-    {
-      "id": "ai-data-explorer",
-      "name": "AI Data Explorer",
-      "categoryId": "sense"
-    },
-    {
-      "id": "now-assist-for-creator-2",
-      "name": "Now Assist for Creator",
-      "categoryId": "act"
-    },
-    {
-      "id": "automated-test-framework",
-      "name": "Automated Test Framework",
-      "categoryId": "act"
-    },
-    {
-      "id": "veza",
-      "name": "Veza",
-      "categoryId": "secure"
-    },
-    {
-      "id": "armis",
-      "name": "Armis",
-      "categoryId": "secure"
+      "layer": "solution",
+      "displayOrder": 30,
+      "capabilities": [
+        {
+          "id": "ai-control-tower-for-enterprise-ai",
+          "name": "AI Control Tower for Enterprise AI"
+        },
+        {
+          "id": "ai-risk-and-compliance-mgmt-2",
+          "name": "AI Risk and Compliance Mgmt"
+        },
+        {
+          "id": "ai-case-mgmt",
+          "name": "AI Case Mgmt"
+        },
+        {
+          "id": "use-case-accelerators",
+          "name": "Use Case Accelerators"
+        },
+        {
+          "id": "aict-enterprise-ai-assets",
+          "name": "AICT - Enterprise AI Assets"
+        }
+      ]
+    },
+    {
+      "id": "veza-from-servicenow",
+      "name": "Veza from ServiceNow",
+      "layer": "solution",
+      "displayOrder": 31,
+      "capabilities": [
+        {
+          "id": "veza-ai-agent-security",
+          "name": "Veza AI Agent Security"
+        },
+        {
+          "id": "veza-access-intelligence",
+          "name": "Veza Access Intelligence"
+        },
+        {
+          "id": "veza-access-visibility",
+          "name": "Veza Access Visibility"
+        },
+        {
+          "id": "veza-access-monitoring",
+          "name": "Veza Access Monitoring"
+        }
+      ]
+    },
+    {
+      "id": "armis-from-servicenow",
+      "name": "Armis from ServiceNow",
+      "layer": "solution",
+      "displayOrder": 32,
+      "capabilities": [
+        {
+          "id": "asset-mgmt-and-security",
+          "name": "Asset Mgmt & Security"
+        },
+        {
+          "id": "threat-intelligence-2",
+          "name": "Threat Intelligence"
+        },
+        {
+          "id": "ot-iot-security",
+          "name": "OT, IOT Security"
+        },
+        {
+          "id": "medical-device-security",
+          "name": "Medical device Security"
+        },
+        {
+          "id": "vulnerability-mgmt-prioritization-and-remediation",
+          "name": "Vulnerability Mgmt Prioritization & Remediation"
+        },
+        {
+          "id": "vulnerability-mgmt-detection-and-response",
+          "name": "Vulnerability Mgmt Detection & Response"
+        },
+        {
+          "id": "early-warning",
+          "name": "Early Warning"
+        }
+      ]
+    },
+    {
+      "id": "app-development",
+      "name": "App Development",
+      "layer": "solution",
+      "displayOrder": 33,
+      "capabilities": [
+        {
+          "id": "app-engine",
+          "name": "App Engine"
+        },
+        {
+          "id": "servicenow-studio",
+          "name": "ServiceNow Studio"
+        },
+        {
+          "id": "now-assist-for-app-engine",
+          "name": "Now Assist for App Engine"
+        },
+        {
+          "id": "creator-studio",
+          "name": "Creator Studio"
+        },
+        {
+          "id": "now-assist-for-creator",
+          "name": "Now Assist for Creator"
+        }
+      ]
     },
     {
       "id": "ai-inventory",
       "name": "AI Inventory",
-      "categoryId": "ai-control-tower-band"
+      "layer": "platform",
+      "displayOrder": 34,
+      "aiNativePillar": "sense",
+      "capabilities": [
+        {
+          "id": "cmdb-csdm",
+          "name": "CMDB / CSDM"
+        },
+        {
+          "id": "raptordb-professional",
+          "name": "RaptorDB Professional"
+        },
+        {
+          "id": "zero-copy-connectors",
+          "name": "Zero-Copy Connectors"
+        },
+        {
+          "id": "mcp-and-a2a",
+          "name": "MCP & A2A"
+        },
+        {
+          "id": "service-catalog",
+          "name": "Service Catalog"
+        },
+        {
+          "id": "process-mining",
+          "name": "Process Mining"
+        },
+        {
+          "id": "context-engine",
+          "name": "Context Engine"
+        },
+        {
+          "id": "workflow-data-fabric",
+          "name": "Workflow Data Fabric"
+        },
+        {
+          "id": "external-content-connector",
+          "name": "External Content Connector"
+        },
+        {
+          "id": "data-catalog",
+          "name": "Data Catalog"
+        },
+        {
+          "id": "platform-analytics",
+          "name": "Platform Analytics"
+        },
+        {
+          "id": "ai-data-explorer",
+          "name": "AI Data Explorer"
+        }
+      ]
     },
     {
       "id": "ai-strategy",
       "name": "AI Strategy",
-      "categoryId": "ai-control-tower-band"
+      "layer": "platform",
+      "displayOrder": 35,
+      "aiNativePillar": "decide",
+      "capabilities": [
+        {
+          "id": "ai-agent-studio",
+          "name": "AI Agent Studio"
+        },
+        {
+          "id": "ai-agent-fabric",
+          "name": "AI Agent Fabric"
+        },
+        {
+          "id": "ai-models",
+          "name": "AI Models"
+        },
+        {
+          "id": "knowledge-graph",
+          "name": "Knowledge Graph"
+        },
+        {
+          "id": "ai-agent-advisor",
+          "name": "AI Agent Advisor"
+        },
+        {
+          "id": "ai-skills",
+          "name": "AI Skills"
+        },
+        {
+          "id": "analytics-and-bi",
+          "name": "Analytics & BI"
+        },
+        {
+          "id": "knowledge-center",
+          "name": "Knowledge Center"
+        },
+        {
+          "id": "document-intelligence",
+          "name": "Document Intelligence"
+        },
+        {
+          "id": "decision-builder",
+          "name": "Decision Builder"
+        }
+      ]
     },
     {
       "id": "ai-value",
       "name": "AI Value",
-      "categoryId": "ai-control-tower-band"
+      "layer": "platform",
+      "displayOrder": 36,
+      "aiNativePillar": "act",
+      "capabilities": [
+        {
+          "id": "workflow-studio",
+          "name": "Workflow Studio"
+        },
+        {
+          "id": "ai-agent-orchestrator",
+          "name": "AI Agent Orchestrator"
+        },
+        {
+          "id": "app-engine-2",
+          "name": "App Engine"
+        },
+        {
+          "id": "servicenow-studio-2",
+          "name": "ServiceNow Studio"
+        },
+        {
+          "id": "agentic-playbooks",
+          "name": "Agentic Playbooks"
+        },
+        {
+          "id": "now-assist-for-creator-2",
+          "name": "Now Assist for Creator"
+        },
+        {
+          "id": "flow-designer",
+          "name": "Flow Designer"
+        },
+        {
+          "id": "autonomous-workforce",
+          "name": "Autonomous Workforce"
+        },
+        {
+          "id": "build-agent",
+          "name": "Build Agent"
+        },
+        {
+          "id": "integration-hub",
+          "name": "Integration Hub"
+        },
+        {
+          "id": "action-fabric",
+          "name": "Action Fabric"
+        },
+        {
+          "id": "automated-test-framework",
+          "name": "Automated Test Framework"
+        }
+      ]
     },
     {
       "id": "ai-risk-and-compliance-security-and-privacy",
       "name": "AI Risk & Compliance, Security & Privacy",
-      "categoryId": "ai-control-tower-band"
+      "layer": "platform",
+      "displayOrder": 37,
+      "aiNativePillar": "secure",
+      "capabilities": [
+        {
+          "id": "ai-guardian",
+          "name": "AI Guardian"
+        },
+        {
+          "id": "acl-and-roles",
+          "name": "ACL & Roles"
+        },
+        {
+          "id": "domain-separation",
+          "name": "Domain Separation"
+        },
+        {
+          "id": "ldap-integration",
+          "name": "LDAP Integration"
+        },
+        {
+          "id": "platform-security",
+          "name": "Platform Security"
+        },
+        {
+          "id": "veza",
+          "name": "Veza"
+        },
+        {
+          "id": "cmdb-and-ai-inventory",
+          "name": "CMDB & AI Inventory"
+        },
+        {
+          "id": "platform-encryption",
+          "name": "Platform Encryption"
+        },
+        {
+          "id": "vault",
+          "name": "Vault"
+        },
+        {
+          "id": "deny-unless",
+          "name": "Deny Unless"
+        },
+        {
+          "id": "security-center",
+          "name": "Security Center"
+        },
+        {
+          "id": "armis",
+          "name": "Armis"
+        }
+      ]
     }
   ]
 }

@@ -11,7 +11,6 @@ export type AiNativePillar = 'sense' | 'decide' | 'act' | 'secure';
 export interface Capability {
   id: string;
   name: string;
-  categoryId: string;
 }
 
 export interface Category {
@@ -23,10 +22,13 @@ export interface Category {
   displayOrder: number;
 }
 
+export interface SeedCategory extends Category {
+  capabilities: Capability[];
+}
+
 export interface CapabilityMapSeed {
-  schemaVersion: 1;
+  schemaVersion: 2;
   generatedAt: string;
   sourceSlide: string;
-  categories: Category[];
-  capabilities: Capability[];
+  categories: SeedCategory[];
 }

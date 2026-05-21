@@ -1,0 +1,312 @@
+CPQ/Sales CRM
+  - Order Mgmt
+  - Order Operations
+  - CPQ Core
+  - Lead Mgmt Core
+  - Opportunity Mgmt Core
+  - Marketing by Tenon
+
+CSM
+  - Customer Case Mgmt
+  - Engagement Messenger
+  - Customer Service Portal
+  - Walk-up Experience
+  - Now Assist for CSM
+
+TPSM
+  - Telco & Tech. Provider Service Mgmt
+  - CSM
+  - ITSM
+  - Service Bridge
+  - Assurance Workflow
+  - Now Assist for TMT
+
+FSM
+  - Work Order Mgmt
+  - Advanced Dispatching
+  - Planned Maintenance
+  - Planned Work Mgmt
+  - Contract Mgmt
+  - Now Assist for FSM
+
+Healthcare & Life Sciences
+  - HCLS Applications
+  - HCLS Core
+  - CSM
+  - ITSM
+  - Now Assist for Care Team Operations
+
+Retail Service Mgmt
+  - PSDS Applications
+  - Retail Core
+  - Retail Applications
+  - CSM
+  - ITSM
+  - Now Assist for RSM
+
+FSO
+  - Financial Service & Data Model
+  - Payment Operations
+  - Card Operations
+  - Dispute Mgmt
+  - Loan Operations
+  - Deposit Operations
+  - Treasury Operations
+  - Now Assist for FSO
+
+Manufacturing
+  - MCO Applications
+  - CSM
+  - ITSM
+  - Now Assist for MCO
+
+Public Sector
+  - PSDS Applications
+  - PSDS Core
+  - Constituent Experience
+  - Government agent experience
+  - CSM
+  - ITSM
+  - Now Assist for PSDS
+
+EA
+  - Enterprise Modeling & Visualization
+  - Application Rationalization
+  - Technology Portfolio Mgmt
+  - Bus Application Inventory
+  - Digital Integration Mgmt
+  - Business Capability Mgmt
+  - Now Assist for EA
+
+SPM
+  - Roadmap Planning
+  - Demand Mgmt
+  - Project Portfolio Mgmt
+  - Resource Mgmt
+  - Investment Funding
+  - Agile Development
+  - Innovation Mgmt
+  - Now Assist for SPM
+
+ITSM
+  - Incident Mgmt
+  - Problem Mgmt
+  - Change Mgmt
+  - Request Mgmt
+  - Asset Mgmt
+  - Continual Improvement
+  - Digital Portfolio Mgmt
+  - Digital Product Release
+  - ITSM Success Dashboard
+  - Now Assist for ITSM
+  - Digital End-User Experience
+
+HAM
+  - Hardware Asset Mgmt
+  - Hardware Asset Lifecycle Mgmt
+  - Hardware Asset Reservation
+  - Hardware Content Library
+  - Now Assist for HAM
+
+ITOM
+  - Discovery
+  - Service Mapping
+  - Service Graph Connectors
+  - Firewall Audit
+  - Certificate Mgmt
+  - Tag Governance
+  - Agent Client Collector
+  - Event Mgmt
+  - Metric Intelligence
+  - Predictive AIops
+  - Health Log Analytics
+  - Service Observability
+  - Synthetic Monitoring
+  - Cloud Workspace
+  - Cloud Account Mgmt
+  - Now Assist for ITOM
+  - Now Assist for CMDB
+
+SAM
+  - Software Asset Mgmt
+  - SaaS License Mgmt
+  - Software Spend Detection
+  - Cloud Cost Mgmt
+  - Now Assist for SAM
+
+Operational Technology
+  - OT Visibility
+  - OT Vulnerability Response
+  - OT Service Mgmt
+  - OT Asset Mgmt
+  - OT Health
+
+Operational Sustainability Mgmt (ESG)
+  - OSM Mgmt
+  - OSM Risk Mgmt
+  - Scope 3 Emission Mgmt
+  - OSM Reporting
+
+EAM
+  - Enterprise Asset Mgmt
+  - Asset Mgmt
+  - Planned Maintenance
+  - Now Assist for EAM
+
+IRM
+  - Policy & Compliance Mgmt
+  - Risk Mgmt
+  - Audit Mgmt
+  - AI Risk and Compliance Mgmt
+  - Now Assist for IRM
+
+SIR
+  - Security Incident Response
+  - Threat Intelligence
+  - Event Mgmt for Security Operations
+  - Major Security Incident Mgmt
+  - Now Assist for SIR
+
+Vulnerability Response (USEM)
+  - Vulnerability Response
+  - Vulnerability Solution Mgmt
+  - Vulnerability Crisis Mgmt
+  - App Vulnerability Response
+  - Patch Orchestration
+  - Now Assist for VR
+
+Privacy Mgmt
+  - Privacy Mgmt
+  - Privacy Case Mgmt
+  - Policy and Compliance Mgmt
+
+TPRM
+  - Third-party Risk Mgmt
+  - Third-party Portal
+  - Smart Assessment Engine
+
+BCM
+  - Business Continuity Planning
+  - Business Impact Analysis
+  - Crisis Mgmt
+  - BCM Mobile app
+
+HR Service Delivery
+  - HR Case and Knowledge Mgmt
+  - HR Agent Workspace
+  - Employee Journey Mgmt
+  - Employee Center Pro
+  - Talent
+  - Ent. Onboarding & Transitions
+
+Workplace Service Delivery
+  - Workplace Case Mgmt
+  - Workplace Reservation
+  - Workplace Space Mapping
+  - Workplace Visitor Mgmt
+  - Workplace Indoor Mapping
+
+Sourcing & Procurement Ops
+  - Procurement Case Mgmt
+  - Invoice Case Mgmt
+  - ShoppingHub
+  - Sourcing and Purchasing Auto
+  - Supplier Collaboration Portal
+  - Supplier Onboarding
+  - Accounts Payable Invoice Processing
+
+Health & Safety
+  - Health and Safety Case Mgmt
+  - Critical Event Mgmt
+  - Health and Safety Incident Mgmt
+  - Health and Safety Risk Mgmt
+
+Legal Service Delivery
+  - Legal Request Mgmt
+  - Legal Matter Mgmt
+
+AI Control Tower
+  - AI Control Tower for Enterprise AI
+  - AI Risk and Compliance Mgmt
+  - AI Case Mgmt
+  - Use Case Accelerators
+  - AICT - Enterprise AI Assets
+
+Veza from ServiceNow
+  - Veza AI Agent Security
+  - Veza Access Intelligence
+  - Veza Access Visibility
+  - Veza Access Monitoring
+
+Armis from ServiceNow
+  - Asset Mgmt & Security
+  - Threat Intelligence
+  - OT, IOT Security
+  - Medical device Security
+  - Vulnerability Mgmt Prioritization & Remediation
+  - Vulnerability Mgmt Detection & Response
+  - Early Warning
+
+App Development
+  - App Engine
+  - ServiceNow Studio
+  - Now Assist for App Engine
+  - Creator Studio
+  - Now Assist for Creator
+
+
+AI-NATIVE Platform (Foundation - always relevant)
+
+AI Inventory
+  - CMDB / CSDM
+  - RaptorDB Professional
+  - Zero-Copy Connectors
+  - MCP & A2A
+  - Service Catalog
+  - Process Mining
+  - Context Engine
+  - Workflow Data Fabric
+  - External Content Connector
+  - Data Catalog
+  - Platform Analytics
+  - AI Data Explorer
+
+AI Strategy
+  - AI Agent Studio
+  - AI Agent Fabric
+  - AI Models
+  - Knowledge Graph
+  - AI Agent Advisor
+  - AI Skills
+  - Analytics & BI
+  - Knowledge Center
+  - Document Intelligence
+  - Decision Builder
+
+AI Value
+  - Workflow Studio
+  - AI Agent Orchestrator
+  - App Engine
+  - ServiceNow Studio
+  - Agentic Playbooks
+  - Now Assist for Creator
+  - Flow Designer
+  - Autonomous Workforce
+  - Build Agent
+  - Integration Hub
+  - Action Fabric
+  - Automated Test Framework
+
+AI Risk & Compliance, Security & Privacy
+  - AI Guardian
+  - ACL & Roles
+  - Domain Separation
+  - LDAP Integration
+  - Platform Security
+  - Veza
+  - CMDB & AI Inventory
+  - Platform Encryption
+  - Vault
+  - Deny Unless
+  - Security Center
+  - Armis

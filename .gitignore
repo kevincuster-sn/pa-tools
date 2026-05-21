@@ -11,5 +11,10 @@ coverage
 
 # Raw extractor inputs; cleaned seed JSON is committed under renderer/data/.
 seed-sources/*.pptx
+# Dated diff reports from `pnpm extract:map --diff`; for review only.
+seed-sources/diff-report-*.md
+# Dry-run output from `pnpm extract:map --diff`. The committed seed is
+# `capability-map.seed.json` next to it.
+renderer/data/capability-map.seed.next.json
 
 renderer/tsconfig.tsbuildinfo

@@ -21,6 +21,7 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "extract:map": "tsx scripts/extract-capability-map.ts",
     "prepare": "husky"
   },
   "dependencies": {

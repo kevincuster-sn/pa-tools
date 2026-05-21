@@ -45,7 +45,7 @@ export function CapabilityMapView() {
   }, [solutionCategories, categoryEnabled]);
 
   const summary = useMemo(() => {
-    const allIds = seed.capabilities.map((c) => c.id);
+    const allIds = groupedSeed.allCapabilities.map((c) => c.id);
     return countCapabilitiesByStatus(allIds, capabilityStatus);
   }, [capabilityStatus]);
 
@@ -85,7 +85,7 @@ export function CapabilityMapView() {
   }
 
   const selectedCapability = popover
-    ? (seed.capabilities.find((c) => c.id === popover.id) ?? null)
+    ? (groupedSeed.allCapabilities.find((c) => c.id === popover.id) ?? null)
     : null;
 
   return (

@@ -1,12 +1,21 @@
-// One-time extractor for the ServiceNow Capability Map slide deck.
-// Run via `pnpm tsx scripts/extract-capability-map.ts [path/to/file.pptx]`.
+// Extractor for the ServiceNow Capability Map slide deck.
 //
-// This script is deterministic: given the same .pptx it always produces the
-// same seed JSON with the same slug IDs. It is rerun only when ServiceNow
-// publishes a new version of the slide. The output is meant to be reviewed
-// by hand and cleaned up before being committed as the source of truth.
+//   pnpm extract:map [path/to/file.pptx]
+//     Commits the seed: writes renderer/data/capability-map.seed.json.
+//
+//   pnpm extract:map --diff [path/to/file.pptx]
+//     Dry run: writes renderer/data/capability-map.seed.next.json plus a
+//     dated markdown diff report under seed-sources/. The current committed
+//     seed is left untouched. Use this when a new pptx arrives to review
+//     what would change before promoting it.
+//
+// Slug generation is deterministic: the same input name produces the same
+// id every run. For names that drift between releases (typo fixes, marketing
+// rewrites), seed-sources/id-overrides.json maps `name → canonical-id` so
+// the id stays stable and customer state in existing .pamap files keeps
+// referring to the right capability.
 
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, access } from 'node:fs/promises';
 import { resolve, basename } from 'node:path';
 import JSZip from 'jszip';
 import { XMLParser } from 'fast-xml-parser';
@@ -15,7 +24,15 @@ import type {
   Capability,
   CapabilityMapSeed,
   Category,
+  SeedCategory,
 } from '../renderer/data/types';
+
+// Internal flat capability shape used during extraction; the foreign key is
+// dropped when we nest the capabilities under their parent category for the
+// final seed output.
+interface FlatCapability extends Capability {
+  categoryId: string;
+}
 
 // --- constants tuned to the May 2026 slide ---
 const FILL_CAPABILITY = '15243E';
@@ -32,7 +49,10 @@ const PILLAR_LABELS: Record<string, AiNativePillar> = {
 };
 
 const DEFAULT_INPUT = resolve(process.cwd(), 'seed-sources/2026-May_Full_Capability_Map.pptx');
-const DEFAULT_OUTPUT = resolve(process.cwd(), 'renderer/data/capability-map.seed.json');
+const SEED_OUTPUT = resolve(process.cwd(), 'renderer/data/capability-map.seed.json');
+const SEED_NEXT_OUTPUT = resolve(process.cwd(), 'renderer/data/capability-map.seed.next.json');
+const ID_OVERRIDES_PATH = resolve(process.cwd(), 'seed-sources/id-overrides.json');
+const SEED_SOURCES_DIR = resolve(process.cwd(), 'seed-sources');
 
 interface Shape {
   text: string;
@@ -232,17 +252,63 @@ function slugify(name: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
-function uniqueSlug(name: string, taken: Set<string>): string {
+interface SlugContext {
+  taken: Set<string>;
+  overrides: Map<string, string>;
+  warnings: string[];
+}
+
+function uniqueSlug(name: string, ctx: SlugContext): string {
+  const override = ctx.overrides.get(name);
+  if (override) {
+    if (ctx.taken.has(override)) {
+      // The override would collide with an id we already assigned. That
+      // means the overrides file is wrong; record a warning and fall back
+      // to suffixing so the run still completes.
+      ctx.warnings.push(
+        `id-override "${name}" → "${override}" collides with an already-assigned id; suffixing.`,
+      );
+    } else {
+      ctx.taken.add(override);
+      return override;
+    }
+  }
   const base = slugify(name) || 'item';
-  if (!taken.has(base)) {
-    taken.add(base);
+  if (!ctx.taken.has(base)) {
+    ctx.taken.add(base);
     return base;
   }
   let n = 2;
-  while (taken.has(`${base}-${n}`)) n++;
+  while (ctx.taken.has(`${base}-${n}`)) n++;
   const out = `${base}-${n}`;
-  taken.add(out);
+  ctx.taken.add(out);
   return out;
+}
+
+async function loadIdOverrides(): Promise<Map<string, string>> {
+  try {
+    await access(ID_OVERRIDES_PATH);
+  } catch {
+    return new Map();
+  }
+  const raw = await readFile(ID_OVERRIDES_PATH, 'utf8');
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (e) {
+    throw new Error(`Failed to parse ${ID_OVERRIDES_PATH}: ${(e as Error).message}`, { cause: e });
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error(`${ID_OVERRIDES_PATH} must be a JSON object of name → id`);
+  }
+  const map = new Map<string, string>();
+  for (const [name, id] of Object.entries(parsed as Record<string, unknown>)) {
+    if (typeof id !== 'string' || !id) {
+      throw new Error(`id-overrides: value for "${name}" must be a non-empty string`);
+    }
+    map.set(name, id);
+  }
+  return map;
 }
 
 // --- extraction ---
@@ -256,14 +322,24 @@ interface ExtractionResult {
   seed: CapabilityMapSeed;
   orphans: { name: string; distance: number; nearestCategory: string }[];
   duplicates: { name: string; ids: string[] }[];
+  warnings: string[];
 }
 
-function extract(shapes: Shape[], sourceSlide: string): ExtractionResult {
+function extract(
+  shapes: Shape[],
+  sourceSlide: string,
+  overrides: Map<string, string>,
+): ExtractionResult {
   const pillars = detectPillars(shapes);
+
+  const ctx: SlugContext = {
+    taken: new Set<string>(),
+    overrides,
+    warnings: [],
+  };
 
   // 1. Solution categories
   const categoryEntries: CategoryEntry[] = [];
-  const takenSlugs = new Set<string>();
 
   // Order categories deterministically by (y, x).
   const categoryShapes = shapes
@@ -276,7 +352,7 @@ function extract(shapes: Shape[], sourceSlide: string): ExtractionResult {
     .sort((a, b) => a.y - b.y || a.x - b.x);
 
   for (const s of categoryShapes) {
-    const id = uniqueSlug(s.text, takenSlugs);
+    const id = uniqueSlug(s.text, ctx);
     categoryEntries.push({
       id,
       name: s.text,
@@ -290,7 +366,7 @@ function extract(shapes: Shape[], sourceSlide: string): ExtractionResult {
   // 2. Four pillar categories
   const pillarCategoryById = new Map<AiNativePillar, Category>();
   for (const p of pillars) {
-    const id = uniqueSlug(p.name, takenSlugs);
+    const id = uniqueSlug(p.name, ctx);
     const cat: Category = {
       id,
       name: p.name,
@@ -303,7 +379,7 @@ function extract(shapes: Shape[], sourceSlide: string): ExtractionResult {
   }
 
   // 3. AI Control Tower band (special ai-native category)
-  const bandCategoryId = uniqueSlug('AI Control Tower Band', takenSlugs);
+  const bandCategoryId = uniqueSlug('AI Control Tower Band', ctx);
   const bandCategory: Category = {
     id: bandCategoryId,
     name: 'AI Control Tower',
@@ -313,7 +389,7 @@ function extract(shapes: Shape[], sourceSlide: string): ExtractionResult {
   categoryEntries.push({ ...bandCategory, centerX: 0, centerY: AI_CONTROL_TOWER_BAND_Y });
 
   // 4. Solution capabilities — cluster 15243E shapes to nearest solution category.
-  const capabilities: Capability[] = [];
+  const capabilities: FlatCapability[] = [];
   const orphans: ExtractionResult['orphans'] = [];
 
   const solutionCategoryEntries = categoryEntries.filter((c) => c.layer === 'solution');
@@ -331,7 +407,7 @@ function extract(shapes: Shape[], sourceSlide: string): ExtractionResult {
       if (!best || d < best.d) best = { entry: cat, d };
     }
     if (!best) continue;
-    const id = uniqueSlug(s.text, takenSlugs);
+    const id = uniqueSlug(s.text, ctx);
     capabilities.push({ id, name: s.text, categoryId: best.entry.id });
     if (best.d > ORPHAN_DISTANCE_EMU) {
       orphans.push({
@@ -352,7 +428,7 @@ function extract(shapes: Shape[], sourceSlide: string): ExtractionResult {
     if (!p) continue;
     const cat = pillarCategoryById.get(p.pillar);
     if (!cat) continue;
-    const id = uniqueSlug(s.text, takenSlugs);
+    const id = uniqueSlug(s.text, ctx);
     capabilities.push({ id, name: s.text, categoryId: cat.id });
   }
 
@@ -362,7 +438,7 @@ function extract(shapes: Shape[], sourceSlide: string): ExtractionResult {
     .filter((s) => !isAiControlTowerBandHeader(s.text, s.y))
     .sort((a, b) => a.x - b.x);
   for (const s of bandShapes) {
-    const id = uniqueSlug(s.text, takenSlugs);
+    const id = uniqueSlug(s.text, ctx);
     capabilities.push({ id, name: s.text, categoryId: bandCategoryId });
   }
 
@@ -378,32 +454,271 @@ function extract(shapes: Shape[], sourceSlide: string): ExtractionResult {
     if (ids.length > 1) duplicates.push({ name, ids });
   }
 
+  const capabilitiesByCategory = new Map<string, Capability[]>();
+  for (const cap of capabilities) {
+    const { categoryId, ...rest } = cap;
+    const list = capabilitiesByCategory.get(categoryId);
+    if (list) list.push(rest);
+    else capabilitiesByCategory.set(categoryId, [rest]);
+  }
+
+  const nestedCategories: SeedCategory[] = categoryEntries.map(
+    ({ centerX: _x, centerY: _y, ...rest }) => ({
+      ...rest,
+      capabilities: capabilitiesByCategory.get(rest.id) ?? [],
+    }),
+  );
+
   const seed: CapabilityMapSeed = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     generatedAt: new Date().toISOString(),
     sourceSlide,
-    categories: categoryEntries.map(({ centerX: _x, centerY: _y, ...rest }) => rest),
-    capabilities,
+    categories: nestedCategories,
   };
 
-  return { seed, orphans, duplicates };
+  return { seed, orphans, duplicates, warnings: ctx.warnings };
+}
+
+// --- diff ---
+
+interface CategoryDiff {
+  added: Array<{ id: string; name: string }>;
+  removed: Array<{ id: string; name: string; affectedCapabilities: number }>;
+  renamed: Array<{ id: string; oldName: string; newName: string }>;
+}
+
+interface CapabilityDiff {
+  added: Array<{ id: string; name: string; categoryName: string }>;
+  removed: Array<{ id: string; name: string; categoryName: string }>;
+  renamed: Array<{ id: string; oldName: string; newName: string }>;
+  moved: Array<{
+    id: string;
+    name: string;
+    oldCategoryName: string;
+    newCategoryName: string;
+  }>;
+}
+
+interface SeedDiff {
+  categories: CategoryDiff;
+  capabilities: CapabilityDiff;
+}
+
+function flattenCapabilities(s: CapabilityMapSeed): Array<Capability & { categoryId: string }> {
+  const out: Array<Capability & { categoryId: string }> = [];
+  for (const cat of s.categories) {
+    for (const cap of cat.capabilities) {
+      out.push({ ...cap, categoryId: cat.id });
+    }
+  }
+  return out;
+}
+
+function computeDiff(oldSeed: CapabilityMapSeed, newSeed: CapabilityMapSeed): SeedDiff {
+  const oldCats = new Map(oldSeed.categories.map((c) => [c.id, c]));
+  const newCats = new Map(newSeed.categories.map((c) => [c.id, c]));
+  const oldCapsFlat = flattenCapabilities(oldSeed);
+  const newCapsFlat = flattenCapabilities(newSeed);
+  const oldCaps = new Map(oldCapsFlat.map((c) => [c.id, c]));
+  const newCaps = new Map(newCapsFlat.map((c) => [c.id, c]));
+
+  const categoryDiff: CategoryDiff = { added: [], removed: [], renamed: [] };
+
+  for (const [id, cat] of newCats) {
+    if (!oldCats.has(id)) {
+      categoryDiff.added.push({ id, name: cat.name });
+    }
+  }
+  for (const [id, cat] of oldCats) {
+    if (!newCats.has(id)) {
+      const affected = oldCapsFlat.filter((c) => c.categoryId === id).length;
+      categoryDiff.removed.push({ id, name: cat.name, affectedCapabilities: affected });
+    }
+  }
+  for (const [id, newCat] of newCats) {
+    const oldCat = oldCats.get(id);
+    if (oldCat && oldCat.name !== newCat.name) {
+      categoryDiff.renamed.push({ id, oldName: oldCat.name, newName: newCat.name });
+    }
+  }
+
+  const capabilityDiff: CapabilityDiff = { added: [], removed: [], renamed: [], moved: [] };
+
+  const nameOfCat = (id: string, side: 'old' | 'new'): string => {
+    const cat = side === 'old' ? oldCats.get(id) : newCats.get(id);
+    return cat?.name ?? `(unknown: ${id})`;
+  };
+
+  for (const [id, cap] of newCaps) {
+    if (!oldCaps.has(id)) {
+      capabilityDiff.added.push({
+        id,
+        name: cap.name,
+        categoryName: nameOfCat(cap.categoryId, 'new'),
+      });
+    }
+  }
+  for (const [id, cap] of oldCaps) {
+    if (!newCaps.has(id)) {
+      capabilityDiff.removed.push({
+        id,
+        name: cap.name,
+        categoryName: nameOfCat(cap.categoryId, 'old'),
+      });
+    }
+  }
+  for (const [id, newCap] of newCaps) {
+    const oldCap = oldCaps.get(id);
+    if (!oldCap) continue;
+    if (oldCap.name !== newCap.name) {
+      capabilityDiff.renamed.push({ id, oldName: oldCap.name, newName: newCap.name });
+    }
+    if (oldCap.categoryId !== newCap.categoryId) {
+      capabilityDiff.moved.push({
+        id,
+        name: newCap.name,
+        oldCategoryName: nameOfCat(oldCap.categoryId, 'old'),
+        newCategoryName: nameOfCat(newCap.categoryId, 'new'),
+      });
+    }
+  }
+
+  // Deterministic ordering
+  const byId = <T extends { id: string }>(a: T, b: T) => a.id.localeCompare(b.id);
+  categoryDiff.added.sort(byId);
+  categoryDiff.removed.sort(byId);
+  categoryDiff.renamed.sort(byId);
+  capabilityDiff.added.sort(byId);
+  capabilityDiff.removed.sort(byId);
+  capabilityDiff.renamed.sort(byId);
+  capabilityDiff.moved.sort(byId);
+
+  return { categories: categoryDiff, capabilities: capabilityDiff };
+}
+
+function renderDiffMarkdown(
+  diff: SeedDiff,
+  meta: { oldSource: string; newSource: string; generatedAt: string },
+): string {
+  const lines: string[] = [];
+  lines.push(`# Capability Map Diff — ${meta.generatedAt.slice(0, 10)}`);
+  lines.push('');
+  lines.push(`- Old seed source: \`${meta.oldSource}\``);
+  lines.push(`- New seed source: \`${meta.newSource}\``);
+  lines.push('');
+
+  const c = diff.categories;
+  const k = diff.capabilities;
+  const total =
+    c.added.length +
+    c.removed.length +
+    c.renamed.length +
+    k.added.length +
+    k.removed.length +
+    k.renamed.length +
+    k.moved.length;
+  lines.push(`**Summary:** ${total} change${total === 1 ? '' : 's'}`);
+  lines.push('');
+  lines.push(
+    `- Categories: +${c.added.length} added, -${c.removed.length} removed, ~${c.renamed.length} renamed`,
+  );
+  lines.push(
+    `- Capabilities: +${k.added.length} added, -${k.removed.length} removed, ~${k.renamed.length} renamed, ↔${k.moved.length} moved`,
+  );
+  lines.push('');
+
+  lines.push('## Categories');
+  lines.push('');
+  lines.push('### Added');
+  if (c.added.length === 0) lines.push('_(none)_');
+  for (const x of c.added) lines.push(`- \`${x.id}\` — ${x.name}`);
+  lines.push('');
+  lines.push('### Removed');
+  if (c.removed.length === 0) lines.push('_(none)_');
+  for (const x of c.removed) {
+    lines.push(
+      `- \`${x.id}\` — ${x.name} _(${x.affectedCapabilities} capabilit${x.affectedCapabilities === 1 ? 'y' : 'ies'} affected)_`,
+    );
+  }
+  lines.push('');
+  lines.push('### Renamed');
+  if (c.renamed.length === 0) lines.push('_(none)_');
+  for (const x of c.renamed) lines.push(`- \`${x.id}\` — "${x.oldName}" → "${x.newName}"`);
+  lines.push('');
+
+  lines.push('## Capabilities');
+  lines.push('');
+  lines.push('### Added');
+  if (k.added.length === 0) lines.push('_(none)_');
+  for (const x of k.added) lines.push(`- \`${x.id}\` — ${x.name} _(in ${x.categoryName})_`);
+  lines.push('');
+  lines.push('### Removed');
+  if (k.removed.length === 0) lines.push('_(none)_');
+  for (const x of k.removed) lines.push(`- \`${x.id}\` — ${x.name} _(was in ${x.categoryName})_`);
+  lines.push('');
+  lines.push('### Renamed');
+  if (k.renamed.length === 0) lines.push('_(none)_');
+  for (const x of k.renamed) lines.push(`- \`${x.id}\` — "${x.oldName}" → "${x.newName}"`);
+  lines.push('');
+  lines.push('### Moved');
+  if (k.moved.length === 0) lines.push('_(none)_');
+  for (const x of k.moved) {
+    lines.push(`- \`${x.id}\` — ${x.name} _(${x.oldCategoryName} → ${x.newCategoryName})_`);
+  }
+  lines.push('');
+
+  if (
+    c.renamed.length === 0 &&
+    (c.added.length > 0 || c.removed.length > 0 || k.added.length > 0 || k.removed.length > 0)
+  ) {
+    lines.push('---');
+    lines.push('');
+    lines.push(
+      '> ℹ️  If any of the items above are actually renames (same thing, new wording), add an entry to `seed-sources/id-overrides.json` mapping the **new name** to the **canonical id**, then re-run `pnpm extract:map --diff`.',
+    );
+    lines.push('');
+  }
+
+  return lines.join('\n');
 }
 
 // --- main ---
 
-async function main(): Promise<void> {
-  const inputArg = process.argv[2];
-  const input = inputArg ? resolve(inputArg) : DEFAULT_INPUT;
-  const output = DEFAULT_OUTPUT;
+interface CliArgs {
+  diff: boolean;
+  input: string;
+}
 
-  console.log(`Reading: ${input}`);
-  const shapes = await loadShapes(input);
+function parseArgs(argv: string[]): CliArgs {
+  let diff = false;
+  let input: string | undefined;
+  for (const arg of argv) {
+    if (arg === '--diff') diff = true;
+    else if (arg.startsWith('--')) throw new Error(`Unknown flag: ${arg}`);
+    else if (input !== undefined) throw new Error(`Unexpected positional arg: ${arg}`);
+    else input = arg;
+  }
+  return { diff, input: input ? resolve(input) : DEFAULT_INPUT };
+}
+
+function todayStamp(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+async function main(): Promise<void> {
+  const args = parseArgs(process.argv.slice(2));
+  console.log(`Reading: ${args.input}`);
+  if (args.diff) console.log('Mode: --diff (will not overwrite committed seed)');
+
+  const overrides = await loadIdOverrides();
+  if (overrides.size > 0) {
+    console.log(`Loaded ${overrides.size} id-override${overrides.size === 1 ? '' : 's'}.`);
+  }
+
+  const shapes = await loadShapes(args.input);
   console.log(`Parsed ${shapes.length} shapes from slide1.xml`);
 
-  const result = extract(shapes, basename(input));
-  // Preserve a stable generatedAt by writing it last; deterministic JSON does
-  // not require sorting since we already sort upstream.
-  await writeFile(output, JSON.stringify(result.seed, null, 2) + '\n', 'utf8');
+  const result = extract(shapes, basename(args.input), overrides);
 
   const cats = result.seed.categories;
   const solutionCount = cats.filter((c) => c.layer === 'solution').length;
@@ -412,12 +727,12 @@ async function main(): Promise<void> {
 
   console.log('');
   console.log('=== Extraction report ===');
-  console.log(`Output: ${output}`);
   console.log(`Categories: ${cats.length} total`);
   console.log(`  solution:    ${solutionCount}`);
   console.log(`  platform:    ${platformCount}`);
   console.log(`  ai-native:   ${aiNativeCount}`);
-  console.log(`Capabilities: ${result.seed.capabilities.length}`);
+  const capabilityCount = result.seed.categories.reduce((n, c) => n + c.capabilities.length, 0);
+  console.log(`Capabilities: ${capabilityCount}`);
   console.log('');
   console.log(
     `Orphans (>${ORPHAN_DISTANCE_EMU} EMU from nearest category): ${result.orphans.length}`,
@@ -429,6 +744,59 @@ async function main(): Promise<void> {
   console.log(`Duplicate names: ${result.duplicates.length}`);
   for (const d of result.duplicates) {
     console.log(`  • "${d.name}"  → ${d.ids.join(', ')}`);
+  }
+  if (result.warnings.length > 0) {
+    console.log('');
+    console.log('Warnings:');
+    for (const w of result.warnings) console.log(`  • ${w}`);
+  }
+
+  if (args.diff) {
+    let oldSeed: CapabilityMapSeed | null = null;
+    try {
+      const raw = await readFile(SEED_OUTPUT, 'utf8');
+      oldSeed = JSON.parse(raw) as CapabilityMapSeed;
+    } catch {
+      console.log('');
+      console.log(`No existing seed at ${SEED_OUTPUT} — diff will treat everything as added.`);
+    }
+
+    const diff = oldSeed
+      ? computeDiff(oldSeed, result.seed)
+      : computeDiff(
+          {
+            schemaVersion: 2,
+            generatedAt: '',
+            sourceSlide: '(none)',
+            categories: [],
+          },
+          result.seed,
+        );
+
+    await writeFile(SEED_NEXT_OUTPUT, JSON.stringify(result.seed, null, 2) + '\n', 'utf8');
+
+    const markdown = renderDiffMarkdown(diff, {
+      oldSource: oldSeed?.sourceSlide ?? '(none)',
+      newSource: basename(args.input),
+      generatedAt: result.seed.generatedAt,
+    });
+    const reportPath = resolve(SEED_SOURCES_DIR, `diff-report-${todayStamp()}.md`);
+    await writeFile(reportPath, markdown, 'utf8');
+
+    console.log('');
+    console.log('=== Diff ===');
+    console.log(markdown);
+    console.log('');
+    console.log(`Next seed: ${SEED_NEXT_OUTPUT}`);
+    console.log(`Diff report: ${reportPath}`);
+    console.log('');
+    console.log(
+      'Review the diff. Add renames to seed-sources/id-overrides.json if needed, then run `pnpm extract:map` (without --diff) to commit.',
+    );
+  } else {
+    await writeFile(SEED_OUTPUT, JSON.stringify(result.seed, null, 2) + '\n', 'utf8');
+    console.log('');
+    console.log(`Seed: ${SEED_OUTPUT}`);
   }
 }
 

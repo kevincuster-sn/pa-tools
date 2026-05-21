@@ -26,14 +26,15 @@ export interface GroupedSeed {
     capabilities: Capability[];
   }>;
   capabilitiesByCategory: Map<string, Capability[]>;
+  allCapabilities: Capability[];
 }
 
 function groupSeed(s: CapabilityMapSeed): GroupedSeed {
   const capabilitiesByCategory = new Map<string, Capability[]>();
-  for (const cap of s.capabilities) {
-    const list = capabilitiesByCategory.get(cap.categoryId);
-    if (list) list.push(cap);
-    else capabilitiesByCategory.set(cap.categoryId, [cap]);
+  const allCapabilities: Capability[] = [];
+  for (const cat of s.categories) {
+    capabilitiesByCategory.set(cat.id, cat.capabilities);
+    allCapabilities.push(...cat.capabilities);
   }
 
   const solutionCategories = s.categories
@@ -60,6 +61,7 @@ function groupSeed(s: CapabilityMapSeed): GroupedSeed {
     },
     pillars,
     capabilitiesByCategory,
+    allCapabilities,
   };
 }
 
