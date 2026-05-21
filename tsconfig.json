@@ -13,10 +13,9 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "baseUrl": ".",
     "paths": {
-      "@shared/*": ["shared/*"],
-      "@renderer/*": ["renderer/*"]
+      "@shared/*": ["./shared/*"],
+      "@renderer/*": ["./renderer/*"]
     }
   },
   "include": ["shared/**/*.ts"],
