@@ -10,6 +10,7 @@ const config: Config = {
           DEFAULT: 'var(--bg)',
           elevated: 'var(--bg-elevated)',
           sunken: 'var(--bg-sunken)',
+          overlay: 'var(--bg-overlay)',
         },
         fg: {
           DEFAULT: 'var(--fg)',

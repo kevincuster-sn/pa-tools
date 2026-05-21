@@ -37,8 +37,7 @@ function CapabilityPillImpl({ capability, status, hasNotes, disabled, selected, 
           selected ? 'ring-1 ring-accent' : '',
         ].join(' ')}
         style={{
-          // ~7% tint of status color over bg
-          backgroundColor: `color-mix(in srgb, ${meta.color} 7%, var(--bg))`,
+          backgroundColor: `color-mix(in srgb, ${meta.color} 22%, var(--bg))`,
         }}
       >
         <span

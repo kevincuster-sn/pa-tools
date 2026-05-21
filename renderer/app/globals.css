@@ -14,6 +14,7 @@
   --bg: #ffffff;
   --bg-elevated: #f6f9fa;
   --bg-sunken: #ecf1f3;
+  --bg-overlay: #ffffff;
 
   --fg: #032d42; /* Infinite Blue */
   --fg-muted: #3c5566;
@@ -28,9 +29,9 @@
   --brand-fg: #ffffff;
 
   --status-not-licensed: #94a3a6;
-  --status-no-intent: #5c7378;
+  --status-no-intent: #2c3538;
   --status-not-in-use: #d97706;
-  --status-planning: #52b8ff; /* Bright Blue */
+  --status-planning: #1d9bff; /* Bright Blue */
   --status-implementing: #7661ff; /* Bright Indigo */
   --status-in-use: #63df4e; /* Wasabi Green */
 }
@@ -40,6 +41,7 @@
   --bg: #032d42; /* Infinite Blue */
   --bg-elevated: #0a4359;
   --bg-sunken: #021f30;
+  --bg-overlay: #155a78;
 
   --fg: #ffffff;
   --fg-muted: #b8c7d2;
@@ -54,9 +56,9 @@
   --brand-fg: #032d42;
 
   --status-not-licensed: #6b8293;
-  --status-no-intent: #4a6377;
+  --status-no-intent: #1f2528;
   --status-not-in-use: #f59e0b;
-  --status-planning: #52b8ff;
+  --status-planning: #1d9bff;
   --status-implementing: #7661ff;
   --status-in-use: #63df4e;
 }
@@ -66,6 +68,7 @@
     --bg: #032d42;
     --bg-elevated: #0a4359;
     --bg-sunken: #021f30;
+    --bg-overlay: #155a78;
 
     --fg: #ffffff;
     --fg-muted: #b8c7d2;
@@ -80,9 +83,9 @@
     --brand-fg: #032d42;
 
     --status-not-licensed: #6b8293;
-    --status-no-intent: #4a6377;
+    --status-no-intent: #1f2528;
     --status-not-in-use: #f59e0b;
-    --status-planning: #52b8ff;
+    --status-planning: #1d9bff;
     --status-implementing: #7661ff;
     --status-in-use: #63df4e;
   }

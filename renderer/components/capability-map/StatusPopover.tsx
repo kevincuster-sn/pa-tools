@@ -19,7 +19,7 @@ interface Position {
   left: number;
 }
 
-const POPOVER_WIDTH = 320;
+const POPOVER_WIDTH = 380;
 const POPOVER_MARGIN = 8;
 
 function computePosition(anchor: HTMLElement, popoverHeight: number): Position {
@@ -122,7 +122,7 @@ export function StatusPopover({
         visibility: pos ? 'visible' : 'hidden',
         zIndex: 50,
       }}
-      className="rounded border border-border-strong bg-bg-elevated p-3 shadow-lg"
+      className="rounded border border-border-strong bg-bg-overlay p-3 shadow-xl"
     >
       <header className="mb-2 truncate text-sm font-medium text-fg" title={capabilityName}>
         {capabilityName}
