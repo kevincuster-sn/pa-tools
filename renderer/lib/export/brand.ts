@@ -47,9 +47,14 @@ export const STATUS_TEXT_COLORS: Record<CapabilityStatus, string> = {
 };
 
 /**
- * Preferred font stack. PDF/PPTX exports can't ship the proprietary
- * ServiceNow Sans face, so we fall back to widely-available sans-serif
- * fonts that closely match its proportions.
+ * PDF/PPTX exports can't ship the proprietary ServiceNow Sans face, so we
+ * embed Inter (OFL-1.1) — a widely-used geometric sans that closely matches
+ * ServiceNow Sans's proportions.
+ *
+ * The PDF font is registered via `jsPDF.addFont()` using the embedded TTF
+ * bytes in fonts/inter.gen.ts, so it renders identically everywhere.
+ * The PPTX font is referenced by face name; PowerPoint will substitute if
+ * the viewer doesn't have Inter installed.
  */
-export const EXPORT_FONT_FAMILY = 'Helvetica';
-export const EXPORT_FONT_FAMILY_PPTX = 'Calibri';
+export const EXPORT_FONT_FAMILY = 'Inter';
+export const EXPORT_FONT_FAMILY_PPTX = 'Inter';
