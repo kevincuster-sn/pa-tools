@@ -3,18 +3,42 @@ import { STATUSES } from '../capability-status';
 import { EXPORT_FONT_FAMILY_PPTX, EXPORT_PALETTE, STATUS_COLORS } from './brand';
 import type { ExportAiPillar, ExportCapability, ExportCategory, ExportData } from './data';
 
-// PptxGenJS uses inches as the unit. LAYOUT_WIDE is 13.333" × 7.5".
+// pptxgenjs uses inches. LAYOUT_WIDE is 13.333" × 7.5".
 const SLIDE_W = 13.333;
 const SLIDE_H = 7.5;
-const MARGIN = 0.3;
+const MARGIN = 0.1;
 
-// PptxGenJS hex colors are RRGGBB without the leading '#'.
+// Vertical chrome heights (inches). Tuned so the grid gets as much room as
+// possible — the user wants everything on a single slide whenever it fits.
+const HEADER_H = 0.45;
+const ACCENT_H = 0.035;
+const LEGEND_H = 0.18;
+const AI_LABEL_H = 0.2; // section label that floats above the AI band
+const AI_BAND_H = 1.3;
+const SECTION_GAP = 0.04;
+
+// Card / pill sizing. PILL_H_MAX is intentionally generous so the fit search
+// can grow pills into available space when only a handful of categories are
+// active. PILL_H_MIN keeps the worst-case dense layout readable.
+const PILL_H_MAX = 0.34;
+const PILL_H_MIN = 0.1;
+const PILL_STEP = 0.005;
+const PILL_GAP = 0.02;
+const CARD_HEADER_H = 0.2;
+const CARD_PADDING = 0.03;
+const CARD_GAP = 0.05;
+const MIN_COLS = 4;
+const MAX_COLS = 8;
+
+const C = EXPORT_PALETTE;
+const FONT = EXPORT_FONT_FAMILY_PPTX;
+
+// pptxgenjs hex colors are RRGGBB without the leading '#'.
 function pp(hex: string): string {
   return hex.replace('#', '').toUpperCase();
 }
 
-const C = EXPORT_PALETTE;
-const FONT = EXPORT_FONT_FAMILY_PPTX;
+type Slide = ReturnType<PptxGenJS['addSlide']>;
 
 interface Rect {
   x: number;
@@ -30,173 +54,418 @@ export async function exportCapabilityMapPptx(data: ExportData): Promise<Uint8Ar
   pptx.title = `${data.customerName} - Capability Map`;
   pptx.company = 'ServiceNow';
 
-  const slide = pptx.addSlide();
-  slide.background = { color: pp(C.bg) };
+  const gridW = SLIDE_W - MARGIN * 2;
+  // Height available for the category grid when the AI band is on the same slide.
+  const gridWithAiH =
+    SLIDE_H -
+    MARGIN -
+    HEADER_H -
+    ACCENT_H -
+    SECTION_GAP -
+    LEGEND_H -
+    SECTION_GAP -
+    AI_LABEL_H -
+    AI_BAND_H -
+    MARGIN;
+  // Height available for the category grid when it has the slide to itself.
+  const gridAloneH =
+    SLIDE_H - MARGIN - HEADER_H - ACCENT_H - SECTION_GAP - LEGEND_H - SECTION_GAP - MARGIN;
 
-  drawHeaderBar(slide, data);
-  drawLegend(slide, { x: MARGIN, y: 0.95, w: SLIDE_W - MARGIN * 2, h: 0.25 });
+  // Mode A: try to fit everything on one slide.
+  const fitWithAi = findFit(data.activeCategories, gridW, gridWithAiH);
+  if (fitWithAi) {
+    const slide = pptx.addSlide();
+    slide.background = { color: pp(C.bg) };
+    renderSlide(slide, data, {
+      categories: data.activeCategories,
+      fit: fitWithAi,
+      includeLegend: true,
+      includeAiBand: true,
+      slideLabel: null,
+    });
+    return (await pptx.write({ outputType: 'uint8array' })) as Uint8Array;
+  }
 
-  const aiBandH = 1.7;
-  const aiTop = SLIDE_H - MARGIN - aiBandH;
-  const gridTop = 1.3;
-  const gridBottom = aiTop - 0.25;
+  // Mode B: categories fit on slide 1 alone — give AI band its own slide.
+  const fitAlone = findFit(data.activeCategories, gridW, gridAloneH);
+  if (fitAlone) {
+    const slide1 = pptx.addSlide();
+    slide1.background = { color: pp(C.bg) };
+    renderSlide(slide1, data, {
+      categories: data.activeCategories,
+      fit: fitAlone,
+      includeLegend: true,
+      includeAiBand: false,
+      slideLabel: 'Slide 1 of 2',
+    });
 
-  drawCategoryGrid(slide, data.activeCategories, {
+    const slide2 = pptx.addSlide();
+    slide2.background = { color: pp(C.bg) };
+    renderAiOnlySlide(slide2, data, 'Slide 2 of 2');
+    return (await pptx.write({ outputType: 'uint8array' })) as Uint8Array;
+  }
+
+  // Mode C: even categories alone don't fit — split them and put AI on slide 2.
+  renderTwoSlide(pptx, data, gridW);
+  return (await pptx.write({ outputType: 'uint8array' })) as Uint8Array;
+}
+
+// -------- masonry layout --------------------------------------------------
+
+interface PlacedCard {
+  cat: ExportCategory;
+  height: number;
+}
+
+interface ColumnLayout {
+  cards: PlacedCard[];
+  height: number;
+}
+
+interface GridFit {
+  cols: number;
+  cardW: number;
+  pillH: number;
+  columns: ColumnLayout[];
+  maxColHeight: number;
+}
+
+function categoryCardHeight(cat: ExportCategory, pillH: number): number {
+  const capCount = Math.max(cat.capabilities.length, 1);
+  return CARD_HEADER_H + CARD_PADDING * 2 + capCount * pillH + Math.max(0, capCount - 1) * PILL_GAP;
+}
+
+function distribute(
+  categories: ExportCategory[],
+  cols: number,
+  pillH: number,
+  framW: number,
+): GridFit {
+  const cardW = (framW - CARD_GAP * (cols - 1)) / cols;
+  const columns: ColumnLayout[] = Array.from({ length: cols }, () => ({ cards: [], height: 0 }));
+
+  for (const cat of categories) {
+    const h = categoryCardHeight(cat, pillH);
+    let bestIdx = 0;
+    let bestProjected = columns[0]!.height + (columns[0]!.cards.length > 0 ? CARD_GAP : 0) + h;
+    for (let i = 1; i < cols; i++) {
+      const projected = columns[i]!.height + (columns[i]!.cards.length > 0 ? CARD_GAP : 0) + h;
+      if (projected < bestProjected) {
+        bestProjected = projected;
+        bestIdx = i;
+      }
+    }
+    columns[bestIdx]!.cards.push({ cat, height: h });
+    columns[bestIdx]!.height = bestProjected;
+  }
+
+  const maxColHeight = Math.max(...columns.map((c) => c.height), 0);
+  return { cols, cardW, pillH, columns, maxColHeight };
+}
+
+function findFit(categories: ExportCategory[], framW: number, framH: number): GridFit | null {
+  if (categories.length === 0) {
+    return { cols: 1, cardW: framW, pillH: PILL_H_MAX, columns: [], maxColHeight: 0 };
+  }
+  for (let pillH = PILL_H_MAX; pillH >= PILL_H_MIN; pillH -= PILL_STEP) {
+    for (let cols = MIN_COLS; cols <= MAX_COLS; cols++) {
+      const f = distribute(categories, cols, pillH, framW);
+      if (f.maxColHeight <= framH) return f;
+    }
+  }
+  return null;
+}
+
+// -------- slide composition -----------------------------------------------
+
+interface SlideOpts {
+  categories: ExportCategory[];
+  fit: GridFit;
+  includeLegend: boolean;
+  includeAiBand: boolean;
+  slideLabel: string | null;
+}
+
+function renderSlide(slide: Slide, data: ExportData, opts: SlideOpts): void {
+  const headerBottom = drawHeader(slide, data, opts.slideLabel);
+  let cursor = headerBottom + SECTION_GAP;
+
+  if (opts.includeLegend) {
+    drawLegend(slide, MARGIN, cursor, SLIDE_W - MARGIN * 2, LEGEND_H);
+    cursor += LEGEND_H + SECTION_GAP;
+  }
+
+  // When the AI band is on this slide, reserve room for it (band + its label).
+  const aiSectionH = opts.includeAiBand ? AI_LABEL_H + AI_BAND_H : 0;
+  const contentBottom = SLIDE_H - MARGIN;
+  const aiTop = contentBottom - AI_BAND_H;
+  // The label sits in its own band immediately above the AI band.
+  const gridFrame: Rect = {
     x: MARGIN,
-    y: gridTop,
+    y: cursor,
     w: SLIDE_W - MARGIN * 2,
-    h: gridBottom - gridTop,
-  });
+    h: opts.includeAiBand ? aiTop - AI_LABEL_H - cursor : contentBottom - cursor,
+  };
 
+  drawCategoryGrid(slide, opts.categories, opts.fit, gridFrame);
+
+  if (opts.includeAiBand) {
+    drawAiNativeRow(slide, data, {
+      x: MARGIN,
+      y: aiTop,
+      w: SLIDE_W - MARGIN * 2,
+      h: AI_BAND_H,
+    });
+  }
+
+  // Suppress unused-var warning when AI is omitted.
+  void aiSectionH;
+}
+
+function renderAiOnlySlide(slide: Slide, data: ExportData, slideLabel: string): void {
+  drawHeader(slide, data, slideLabel);
+  // Center the AI band vertically in the remaining slide space.
+  const contentTop = HEADER_H + ACCENT_H + SECTION_GAP + MARGIN;
+  const contentBottom = SLIDE_H - MARGIN;
+  const bandH = Math.min(AI_BAND_H * 2, contentBottom - contentTop - AI_LABEL_H);
+  const bandTop = contentTop + (contentBottom - contentTop - AI_LABEL_H - bandH) / 2 + AI_LABEL_H;
   drawAiNativeRow(slide, data, {
     x: MARGIN,
-    y: aiTop,
+    y: bandTop,
     w: SLIDE_W - MARGIN * 2,
-    h: aiBandH,
+    h: bandH,
+  });
+}
+
+function renderTwoSlide(pptx: PptxGenJS, data: ExportData, framW: number): void {
+  const splitIndex = findSplitIndex(data.activeCategories, framW);
+  const first = data.activeCategories.slice(0, splitIndex);
+  const second = data.activeCategories.slice(splitIndex);
+
+  const slide1AvailH =
+    SLIDE_H - MARGIN - HEADER_H - ACCENT_H - SECTION_GAP - LEGEND_H - SECTION_GAP - MARGIN;
+  const slide2AvailH =
+    SLIDE_H - MARGIN - HEADER_H - ACCENT_H - SECTION_GAP - AI_LABEL_H - AI_BAND_H - MARGIN;
+
+  const fit1 =
+    findFit(first, framW, slide1AvailH) ?? distribute(first, MAX_COLS, PILL_H_MIN, framW);
+  const fit2 =
+    findFit(second, framW, slide2AvailH) ?? distribute(second, MAX_COLS, PILL_H_MIN, framW);
+
+  const slide1 = pptx.addSlide();
+  slide1.background = { color: pp(C.bg) };
+  renderSlide(slide1, data, {
+    categories: first,
+    fit: fit1,
+    includeLegend: true,
+    includeAiBand: false,
+    slideLabel: 'Slide 1 of 2',
   });
 
-  drawFooter(slide, data);
+  const slide2 = pptx.addSlide();
+  slide2.background = { color: pp(C.bg) };
+  renderSlide(slide2, data, {
+    categories: second,
+    fit: fit2,
+    includeLegend: false,
+    includeAiBand: true,
+    slideLabel: 'Slide 2 of 2',
+  });
+}
 
-  const out = (await pptx.write({ outputType: 'uint8array' })) as Uint8Array;
-  return out;
+function findSplitIndex(categories: ExportCategory[], framW: number): number {
+  const slide1AvailH =
+    SLIDE_H - MARGIN - HEADER_H - ACCENT_H - SECTION_GAP - LEGEND_H - SECTION_GAP - MARGIN;
+
+  let lo = 1;
+  let hi = categories.length;
+  let best = Math.ceil(categories.length / 2);
+  while (lo <= hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    const slice = categories.slice(0, mid);
+    const f = distribute(slice, MAX_COLS, PILL_H_MIN, framW);
+    if (f.maxColHeight <= slide1AvailH) {
+      best = mid;
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return Math.max(1, best);
 }
 
 // -------- header ----------------------------------------------------------
 
-type Slide = ReturnType<PptxGenJS['addSlide']>;
-
-function drawHeaderBar(slide: Slide, data: ExportData): void {
+function drawHeader(slide: Slide, data: ExportData, slideLabel: string | null): number {
   // Brand bar.
   slide.addShape('rect', {
     x: 0,
     y: 0,
     w: SLIDE_W,
-    h: 0.82,
+    h: HEADER_H,
     fill: { color: pp(C.fg) },
     line: { type: 'none' },
   });
   // Accent stripe.
   slide.addShape('rect', {
     x: 0,
-    y: 0.82,
+    y: HEADER_H,
     w: SLIDE_W,
-    h: 0.045,
+    h: ACCENT_H,
     fill: { color: pp(C.accent) },
     line: { type: 'none' },
   });
 
-  slide.addText(data.customerName, {
+  const generatedAt = formatGeneratedAt(data.generatedAt);
+
+  const customerBlockW = SLIDE_W * 0.45 - MARGIN;
+  const customerName = truncateToFit(data.customerName, customerBlockW - 0.05, 15, true);
+
+  // Left block: customer name (top), generated date (bottom).
+  slide.addText(customerName, {
     x: MARGIN,
-    y: 0.08,
-    w: SLIDE_W - MARGIN * 2 - 3,
-    h: 0.45,
+    y: 0.02,
+    w: customerBlockW,
+    h: 0.24,
     fontFace: FONT,
-    fontSize: 22,
+    fontSize: 15,
     bold: true,
     color: 'FFFFFF',
     valign: 'middle',
+    wrap: false,
   });
-
-  slide.addText('ServiceNow Capability Map', {
+  slide.addText(`Generated ${generatedAt}`, {
     x: MARGIN,
-    y: 0.48,
-    w: SLIDE_W - MARGIN * 2 - 3,
-    h: 0.3,
+    y: 0.24,
+    w: SLIDE_W * 0.45,
+    h: 0.18,
     fontFace: FONT,
-    fontSize: 11,
+    fontSize: 8,
     color: 'DCE8F0',
     valign: 'middle',
+    wrap: false,
   });
 
-  const pct = `${data.overallAdoption.pct}%`;
-  slide.addText(pct, {
-    x: SLIDE_W - 1.6 - MARGIN,
-    y: 0.08,
-    w: 1.6,
-    h: 0.5,
+  // Center block: subtitle (top), slide label (bottom, if present).
+  slide.addText('ServiceNow Capability Map', {
+    x: SLIDE_W * 0.3,
+    y: 0.02,
+    w: SLIDE_W * 0.4,
+    h: 0.24,
     fontFace: FONT,
-    fontSize: 26,
+    fontSize: 10,
+    color: 'DCE8F0',
+    align: 'center',
+    valign: 'middle',
+    wrap: false,
+  });
+  if (slideLabel) {
+    slide.addText(slideLabel, {
+      x: SLIDE_W * 0.3,
+      y: 0.24,
+      w: SLIDE_W * 0.4,
+      h: 0.18,
+      fontFace: FONT,
+      fontSize: 8,
+      color: 'DCE8F0',
+      align: 'center',
+      valign: 'middle',
+      wrap: false,
+    });
+  }
+
+  // Right block: adoption % (top), licensed detail (bottom).
+  const pct = `${data.overallAdoption.pct}%`;
+  const adoptionDetail = `${data.overallAdoption.adopted}/${data.overallAdoption.licensed} licensed`;
+  slide.addText(pct, {
+    x: SLIDE_W - 2.4 - MARGIN,
+    y: 0.02,
+    w: 2.4,
+    h: 0.24,
+    fontFace: FONT,
+    fontSize: 16,
     bold: true,
     color: 'FFFFFF',
     align: 'right',
     valign: 'middle',
+    wrap: false,
+  });
+  slide.addText(adoptionDetail, {
+    x: SLIDE_W - 2.4 - MARGIN,
+    y: 0.24,
+    w: 2.4,
+    h: 0.18,
+    fontFace: FONT,
+    fontSize: 8,
+    color: 'DCE8F0',
+    align: 'right',
+    valign: 'middle',
+    wrap: false,
   });
 
-  slide.addText(
-    `Adoption  (${data.overallAdoption.adopted}/${data.overallAdoption.licensed} licensed)`,
-    {
-      x: SLIDE_W - 3 - MARGIN,
-      y: 0.55,
-      w: 3,
-      h: 0.25,
-      fontFace: FONT,
-      fontSize: 9,
-      color: 'DCE8F0',
-      align: 'right',
-      valign: 'middle',
-    },
-  );
+  return HEADER_H + ACCENT_H;
 }
 
-function drawLegend(slide: Slide, r: Rect): void {
-  let x = r.x;
-  const chipSize = 0.11;
-  const gap = 0.07;
-  const itemGap = 0.18;
+function formatGeneratedAt(d: Date): string {
+  // Short, locale-friendly: "May 22, 2026, 10:42 AM".
+  try {
+    return d.toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  } catch {
+    return d.toISOString();
+  }
+}
 
+// -------- legend ----------------------------------------------------------
+
+function drawLegend(slide: Slide, x: number, y: number, _w: number, h: number): void {
+  const centerY = y + h / 2;
+  const chipSize = 0.12;
+  const chipGap = 0.05;
+  const itemGap = 0.16;
+
+  let cx = x;
   for (const s of STATUSES) {
     slide.addShape('roundRect', {
-      x,
-      y: r.y + (r.h - chipSize) / 2,
+      x: cx,
+      y: centerY - chipSize / 2,
       w: chipSize,
       h: chipSize,
       fill: { color: pp(STATUS_COLORS[s.id]) },
       line: { type: 'none' },
       rectRadius: 0.02,
     });
-    x += chipSize + gap;
-    const label = s.label;
-    const labelW = Math.max(0.4, label.length * 0.07);
-    slide.addText(label, {
-      x,
-      y: r.y,
+    cx += chipSize + chipGap;
+
+    const labelW = estimateTextWidth(s.label, 9) + 0.05;
+    slide.addText(s.label, {
+      x: cx,
+      y,
       w: labelW,
-      h: r.h,
+      h,
       fontFace: FONT,
       fontSize: 9,
       color: pp(C.fgMuted),
       valign: 'middle',
+      wrap: false,
     });
-    x += labelW + itemGap;
+    cx += labelW + itemGap;
   }
-}
-
-function drawFooter(slide: Slide, data: ExportData): void {
-  const stamp = `Generated ${data.generatedAt.toLocaleString()}  ·  ${data.enabledCategoryCount} of ${data.totalCategoryCount} categories enabled`;
-  slide.addText(stamp, {
-    x: MARGIN,
-    y: SLIDE_H - 0.3,
-    w: SLIDE_W - MARGIN * 2,
-    h: 0.22,
-    fontFace: FONT,
-    fontSize: 8,
-    color: pp(C.fgSubtle),
-    valign: 'middle',
-  });
 }
 
 // -------- category grid ---------------------------------------------------
 
-function pickColumns(count: number): number {
-  if (count <= 4) return Math.max(count, 1);
-  if (count <= 9) return 3;
-  if (count <= 16) return 4;
-  if (count <= 25) return 5;
-  if (count <= 30) return 6;
-  return 7;
-}
-
-function drawCategoryGrid(slide: Slide, categories: ExportCategory[], frame: Rect): void {
+function drawCategoryGrid(
+  slide: Slide,
+  categories: ExportCategory[],
+  fit: GridFit,
+  frame: Rect,
+): void {
   if (categories.length === 0) {
     slide.addText('No active categories. Toggle categories on to include them in the export.', {
       x: frame.x,
@@ -207,27 +476,28 @@ function drawCategoryGrid(slide: Slide, categories: ExportCategory[], frame: Rec
       fontSize: 12,
       color: pp(C.fgSubtle),
       italic: true,
+      wrap: false,
     });
     return;
   }
 
-  const gap = 0.1;
-  const cols = pickColumns(categories.length);
-  const rows = Math.ceil(categories.length / cols);
-  const cellW = (frame.w - gap * (cols - 1)) / cols;
-  const cellH = (frame.h - gap * (rows - 1)) / rows;
-
-  categories.forEach((cat, idx) => {
-    const c = idx % cols;
-    const r = Math.floor(idx / cols);
-    const x = frame.x + c * (cellW + gap);
-    const y = frame.y + r * (cellH + gap);
-    drawCategoryCard(slide, cat, { x, y, w: cellW, h: cellH });
+  fit.columns.forEach((col, colIdx) => {
+    let cardY = frame.y;
+    const colX = frame.x + colIdx * (fit.cardW + CARD_GAP);
+    for (const placed of col.cards) {
+      drawCategoryCard(slide, placed.cat, fit.pillH, {
+        x: colX,
+        y: cardY,
+        w: fit.cardW,
+        h: placed.height,
+      });
+      cardY += placed.height + CARD_GAP;
+    }
   });
 }
 
-function drawCategoryCard(slide: Slide, cat: ExportCategory, r: Rect): void {
-  // Card background.
+function drawCategoryCard(slide: Slide, cat: ExportCategory, pillH: number, r: Rect): void {
+  // Card background + border.
   slide.addShape('roundRect', {
     x: r.x,
     y: r.y,
@@ -238,94 +508,84 @@ function drawCategoryCard(slide: Slide, cat: ExportCategory, r: Rect): void {
     rectRadius: 0.04,
   });
 
-  // Header bar.
-  const headerH = 0.28;
+  // Header strip.
   slide.addShape('rect', {
     x: r.x,
     y: r.y,
     w: r.w,
-    h: headerH,
+    h: CARD_HEADER_H,
     fill: { color: pp(C.fg) },
     line: { type: 'none' },
   });
 
   const adoptionText = cat.adoption.licensed > 0 ? `${cat.adoption.pct}%` : '';
-  const adoptionW = adoptionText ? 0.42 : 0;
+  // Title font size grows a little when pills are taller (more breathing room).
+  const titleFontSize = Math.min(11, Math.max(7.5, pillH * 32 + 1));
+  const adoptionFontSize = Math.max(7, titleFontSize - 1);
+  const adoptionW = adoptionText
+    ? Math.max(0.34, estimateTextWidth(adoptionText, adoptionFontSize) + 0.08)
+    : 0;
+  const titleGap = 0.04; // gap reserved between title and adoption text
+  const titleBoxX = r.x + 0.06;
+  const titleBoxW = r.w - 0.06 - adoptionW - titleGap - 0.04;
+  const title = truncateToFit(cat.name, titleBoxW - 0.02, titleFontSize, true);
 
-  slide.addText(cat.name, {
-    x: r.x + 0.07,
+  slide.addText(title, {
+    x: titleBoxX,
     y: r.y,
-    w: r.w - 0.14 - adoptionW,
-    h: headerH,
+    w: titleBoxW,
+    h: CARD_HEADER_H,
     fontFace: FONT,
-    fontSize: 9,
+    fontSize: titleFontSize,
     bold: true,
     color: 'FFFFFF',
     valign: 'middle',
-    isTextBox: true,
+    wrap: false,
   });
 
   if (adoptionText) {
     slide.addText(adoptionText, {
-      x: r.x + r.w - adoptionW - 0.05,
+      x: r.x + r.w - adoptionW - 0.04,
       y: r.y,
       w: adoptionW,
-      h: headerH,
+      h: CARD_HEADER_H,
       fontFace: FONT,
-      fontSize: 9,
+      fontSize: adoptionFontSize,
       color: 'FFFFFF',
       align: 'right',
       valign: 'middle',
+      wrap: false,
     });
   }
 
-  // Capabilities.
-  const listX = r.x + 0.07;
-  const listY = r.y + headerH + 0.06;
-  const listW = r.w - 0.14;
-  const listH = r.h - headerH - 0.12;
-  drawCapabilityList(slide, cat.capabilities, { x: listX, y: listY, w: listW, h: listH });
+  // Capabilities — every one, no count truncation.
+  const listX = r.x + CARD_PADDING;
+  const listY = r.y + CARD_HEADER_H + CARD_PADDING;
+  const listW = r.w - CARD_PADDING * 2;
+  drawCapabilityList(slide, cat.capabilities, pillH, { x: listX, y: listY, w: listW, h: 0 });
 }
 
-function drawCapabilityList(slide: Slide, caps: ExportCapability[], r: Rect): void {
+function drawCapabilityList(slide: Slide, caps: ExportCapability[], pillH: number, r: Rect): void {
   if (caps.length === 0) {
     slide.addText('No capabilities', {
       x: r.x,
       y: r.y,
       w: r.w,
-      h: 0.2,
-      fontFace: FONT,
-      fontSize: 8,
-      italic: true,
-      color: pp(C.fgSubtle),
-    });
-    return;
-  }
-
-  const minH = 0.16;
-  const maxH = 0.22;
-  const gap = 0.03;
-  const pillH = Math.min(maxH, Math.max(minH, (r.h - (caps.length - 1) * gap) / caps.length));
-  const visibleCount = Math.min(caps.length, Math.max(1, Math.floor((r.h + gap) / (pillH + gap))));
-  const truncated = visibleCount < caps.length;
-
-  for (let i = 0; i < visibleCount; i++) {
-    const cap = caps[i]!;
-    const y = r.y + i * (pillH + gap);
-    drawCapabilityPill(slide, cap, { x: r.x, y, w: r.w, h: pillH });
-  }
-
-  if (truncated) {
-    slide.addText(`+${caps.length - visibleCount} more`, {
-      x: r.x,
-      y: r.y + visibleCount * (pillH + gap),
-      w: r.w,
-      h: 0.18,
+      h: pillH,
       fontFace: FONT,
       fontSize: 7,
       italic: true,
       color: pp(C.fgSubtle),
+      valign: 'middle',
+      wrap: false,
     });
+    return;
+  }
+
+  for (let i = 0; i < caps.length; i++) {
+    const cap = caps[i]!;
+    const y = r.y + i * (pillH + PILL_GAP);
+    drawCapabilityPill(slide, cap, { x: r.x, y, w: r.w, h: pillH });
   }
 }
 
@@ -339,12 +599,12 @@ function drawCapabilityPill(slide: Slide, cap: ExportCapability, r: Rect): void 
     w: r.w,
     h: r.h,
     fill: { color: pp(C.bg) },
-    line: { color: pp(C.border), width: 0.3 },
+    line: { color: pp(C.border), width: 0.25 },
     rectRadius: 0.02,
   });
 
   // Status bar on the left edge.
-  const barW = 0.05;
+  const barW = Math.min(0.05, r.h * 0.3);
   slide.addShape('rect', {
     x: r.x,
     y: r.y,
@@ -354,44 +614,57 @@ function drawCapabilityPill(slide: Slide, cap: ExportCapability, r: Rect): void 
     line: { type: 'none' },
   });
 
-  slide.addText(cap.name, {
-    x: r.x + barW + 0.04,
+  // Pill text — font size scales with pill height so the layout grows
+  // uniformly when there's space. truncateToFit keeps long names from
+  // running off the pill, since pptxgenjs's fit:'shrink' is unreliable
+  // for short single-line text.
+  const fontSize = pillFontSize(r.h);
+  const padding = barW + 0.04;
+  const textBoxW = r.w - padding - 0.04;
+  const text = truncateToFit(cap.name, textBoxW - 0.02, fontSize);
+
+  slide.addText(text, {
+    x: r.x + padding,
     y: r.y,
-    w: r.w - barW - 0.08,
+    w: textBoxW,
     h: r.h,
     fontFace: FONT,
-    fontSize: r.h <= 0.17 ? 7 : 8,
+    fontSize,
     color: pp(C.fg),
     valign: 'middle',
-    isTextBox: true,
+    wrap: false,
   });
 }
 
 // -------- AI Native row ---------------------------------------------------
 
 function drawAiNativeRow(slide: Slide, data: ExportData, frame: Rect): void {
-  // Section label.
+  // Labels above the band — placed inside their own AI_LABEL_H band so they
+  // don't overlap the category grid above.
+  const labelY = frame.y - AI_LABEL_H;
   slide.addText('AI-NATIVE PLATFORM', {
     x: frame.x,
-    y: frame.y - 0.25,
-    w: frame.w / 2,
-    h: 0.22,
+    y: labelY,
+    w: frame.w * 0.5,
+    h: AI_LABEL_H,
     fontFace: FONT,
-    fontSize: 9,
+    fontSize: 8,
     bold: true,
     color: pp(C.fgSubtle),
     valign: 'middle',
+    wrap: false,
   });
   slide.addText('Foundation — always relevant', {
-    x: frame.x + frame.w / 2,
-    y: frame.y - 0.25,
-    w: frame.w / 2,
-    h: 0.22,
+    x: frame.x + frame.w * 0.5,
+    y: labelY,
+    w: frame.w * 0.5,
+    h: AI_LABEL_H,
     fontFace: FONT,
-    fontSize: 9,
+    fontSize: 8,
     color: pp(C.fgSubtle),
     align: 'right',
     valign: 'middle',
+    wrap: false,
   });
 
   // Section background.
@@ -405,7 +678,7 @@ function drawAiNativeRow(slide: Slide, data: ExportData, frame: Rect): void {
     rectRadius: 0.04,
   });
 
-  const pad = 0.1;
+  const pad = 0.07;
   const innerX = frame.x + pad;
   const innerY = frame.y + pad;
   const innerW = frame.w - pad * 2;
@@ -413,7 +686,8 @@ function drawAiNativeRow(slide: Slide, data: ExportData, frame: Rect): void {
 
   const pillars = data.aiPillars;
   if (pillars.length === 0) return;
-  const gap = 0.1;
+
+  const gap = 0.06;
   const cols = pillars.length;
   const cellW = (innerW - gap * (cols - 1)) / cols;
 
@@ -434,47 +708,58 @@ function drawAiPillarCard(slide: Slide, p: ExportAiPillar, r: Rect): void {
     rectRadius: 0.04,
   });
 
+  // Header — compact so the capability list has more room.
   slide.addText(p.label, {
-    x: r.x + 0.08,
-    y: r.y + 0.04,
-    w: r.w - 0.16,
-    h: 0.22,
+    x: r.x + 0.05,
+    y: r.y + 0.02,
+    w: r.w - 0.1,
+    h: 0.18,
     fontFace: FONT,
-    fontSize: 10,
+    fontSize: 9,
     bold: true,
     color: pp(C.fg),
     valign: 'middle',
+    wrap: false,
   });
 
+  const titleBottom = 0.2;
+  let subBottom = titleBottom;
   if (p.fullName) {
-    slide.addText(p.fullName, {
-      x: r.x + 0.08,
-      y: r.y + 0.22,
-      w: r.w - 0.16,
-      h: 0.18,
+    subBottom = 0.34;
+    const subFullName = truncateToFit(p.fullName, r.w - 0.1 - 0.02, 6.5);
+    slide.addText(subFullName, {
+      x: r.x + 0.05,
+      y: r.y + titleBottom,
+      w: r.w - 0.1,
+      h: subBottom - titleBottom,
       fontFace: FONT,
-      fontSize: 7,
+      fontSize: 6.5,
       color: pp(C.fgSubtle),
       valign: 'middle',
+      wrap: false,
     });
   }
 
-  const listY = r.y + 0.44;
-  const listH = r.h - 0.44 - 0.06;
-  const listX = r.x + 0.07;
-  const listW = r.w - 0.14;
+  // Capabilities — every one. Pill height scales to whatever fits.
+  const listTopPad = 0.03;
+  const listBottomPad = 0.04;
+  const listY = r.y + subBottom + listTopPad;
+  const listH = r.h - subBottom - listTopPad - listBottomPad;
+  const listX = r.x + 0.04;
+  const listW = r.w - 0.08;
 
   if (p.capabilities.length === 0) return;
   const cols = 2;
-  const gap = 0.04;
+  const gap = 0.015;
   const colW = (listW - gap * (cols - 1)) / cols;
   const rows = Math.ceil(p.capabilities.length / cols);
-  const pillH = Math.min(0.2, Math.max(0.14, (listH - gap * (rows - 1)) / rows));
+  // Compute pillH so the entire list fits the available height. Floor at a
+  // small value to keep the text barely-readable; below that the font shrink
+  // logic takes over.
+  const idealH = (listH - gap * (rows - 1)) / rows;
+  const pillH = Math.min(0.18, Math.max(0.08, idealH));
 
-  const maxRows = Math.max(1, Math.floor((listH + gap) / (pillH + gap)));
-  const visibleCount = Math.min(p.capabilities.length, maxRows * cols);
-
-  for (let i = 0; i < visibleCount; i++) {
+  for (let i = 0; i < p.capabilities.length; i++) {
     const cap = p.capabilities[i]!;
     const c = i % cols;
     const row = Math.floor(i / cols);
@@ -482,4 +767,44 @@ function drawAiPillarCard(slide: Slide, p: ExportAiPillar, r: Rect): void {
     const y = listY + row * (pillH + gap);
     drawCapabilityPill(slide, cap, { x, y, w: colW, h: pillH });
   }
+}
+
+// -------- helpers ---------------------------------------------------------
+
+/**
+ * Rough estimate of text width in inches. pptxgenjs doesn't expose a measure
+ * API, so we approximate using the average advance of Inter at 1pt. Used for
+ * sizing legend chips and reserving room for the adoption %.
+ *
+ * `bold` slightly inflates the multiplier since bold weights are wider.
+ */
+function estimateTextWidth(text: string, fontSize: number, bold = false): number {
+  // Inter's average glyph advance is ~0.5 of the em (~0.55 for bold), in points.
+  const advance = bold ? 0.56 : 0.5;
+  return (text.length * fontSize * advance) / 72;
+}
+
+/**
+ * Truncate `text` with an ellipsis so the rendered width stays under
+ * `maxWidth`. `fit: 'shrink'` is unreliable for short single-line text in
+ * pptxgenjs, so we do the truncation ourselves to guarantee no overflow.
+ */
+function truncateToFit(text: string, maxWidth: number, fontSize: number, bold = false): string {
+  if (estimateTextWidth(text, fontSize, bold) <= maxWidth) return text;
+  if (text.length === 0) return text;
+  const avgChar = estimateTextWidth(text, fontSize, bold) / text.length;
+  const ellipsisW = estimateTextWidth('…', fontSize, bold);
+  const usable = Math.max(0, maxWidth - ellipsisW);
+  const maxChars = Math.max(1, Math.floor(usable / avgChar));
+  return text.slice(0, maxChars).trimEnd() + '…';
+}
+
+/**
+ * Continuous-ish font size scaler based on pill height. Larger pills get
+ * larger text so the layout grows uniformly into available space.
+ */
+function pillFontSize(pillH: number): number {
+  // Linear ramp from ~5pt at minH to ~11pt at maxH, then clamp.
+  const fs = 4 + (pillH - 0.08) * 28;
+  return Math.max(4.5, Math.min(11, fs));
 }
