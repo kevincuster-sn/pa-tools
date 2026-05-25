@@ -2,8 +2,11 @@ import type { Capability, Category } from '../../data/types';
 import type { CapabilityStatus, Document } from '../../../shared/file-format';
 import {
   AI_NATIVE_PILLAR_LABELS,
+  getEffectiveCapabilitiesForCategory,
+  getEffectiveSolutionCategories,
   groupedSeed,
   isCategoryEnabled,
+  isCustomCategoryId,
   partitionCategories,
 } from '../capability-map';
 import { computeAdoption, getCapabilityStatus } from '../capability-status';
@@ -63,20 +66,23 @@ export function buildExportData(doc: Document): ExportData {
   const notesMap = doc.capabilityMap.capabilityNotes;
   const categoryEnabled = doc.capabilityMap.categoryEnabled;
 
-  const { active } = partitionCategories(groupedSeed.solutionCategories, doc.capabilityMap);
+  const solutionCategories = getEffectiveSolutionCategories(doc.capabilityMap);
+  const { active } = partitionCategories(solutionCategories, doc.capabilityMap);
 
   const activeCategories: ExportCategory[] = active.map((cat: Category) => {
-    const caps = groupedSeed.capabilitiesByCategory.get(cat.id) ?? [];
+    const caps = getEffectiveCapabilitiesForCategory(doc.capabilityMap, cat.id);
     const exportCaps = toExportCapabilities(caps, statusMap, notesMap);
+    // Adoption excludes custom items: empty for custom categories,
+    // seed-only for seed categories with custom extras.
+    const adoptionIds = isCustomCategoryId(doc.capabilityMap, cat.id)
+      ? []
+      : (groupedSeed.capabilitiesByCategory.get(cat.id) ?? []).map((c) => c.id);
     return {
       id: cat.id,
       name: cat.name,
       fullName: cat.fullName,
       capabilities: exportCaps,
-      adoption: computeAdoption(
-        caps.map((c) => c.id),
-        statusMap,
-      ),
+      adoption: computeAdoption(adoptionIds, statusMap),
     };
   });
 
@@ -98,11 +104,14 @@ export function buildExportData(doc: Document): ExportData {
     capabilities: toExportCapabilities(p.capabilities, statusMap, notesMap),
   }));
 
-  const allIds = groupedSeed.allCapabilities.map((c) => c.id);
-  const overallAdoption = computeAdoption(allIds, statusMap);
+  // Overall adoption excludes custom items — it measures the seed offering.
+  const overallAdoption = computeAdoption(
+    groupedSeed.allCapabilities.map((c) => c.id),
+    statusMap,
+  );
 
   let enabled = 0;
-  for (const cat of groupedSeed.solutionCategories) {
+  for (const cat of solutionCategories) {
     if (isCategoryEnabled(categoryEnabled, cat.id)) enabled += 1;
   }
 
@@ -111,7 +120,7 @@ export function buildExportData(doc: Document): ExportData {
     generatedAt: new Date(),
     overallAdoption,
     enabledCategoryCount: enabled,
-    totalCategoryCount: groupedSeed.solutionCategories.length,
+    totalCategoryCount: solutionCategories.length,
     activeCategories,
     aiControlTower,
     aiPillars,

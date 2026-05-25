@@ -1,4 +1,4 @@
-import type { CapabilityMapState } from '../../shared/file-format';
+import type { CapabilityMapState, CustomCapability } from '../../shared/file-format';
 import seedJson from '../data/capability-map.seed.json';
 import type { AiNativePillar, Capability, CapabilityMapSeed, Category } from '../data/types';
 
@@ -129,4 +129,103 @@ export function isCategoryEnabled(
 export function matchesSearch(name: string, term: string): boolean {
   if (!term) return true;
   return name.toLowerCase().includes(term);
+}
+
+const MAX_SEED_SOLUTION_DISPLAY_ORDER = (() => {
+  let max = 0;
+  for (const c of groupedSeed.solutionCategories) {
+    if (c.displayOrder > max) max = c.displayOrder;
+  }
+  return max;
+})();
+
+const seedSolutionCategoryIds = new Set(groupedSeed.solutionCategories.map((c) => c.id));
+
+function customCategoriesOf(state: CapabilityMapState) {
+  return state.customCategories ?? [];
+}
+
+function customCapabilitiesOf(state: CapabilityMapState) {
+  return state.customCapabilities ?? {};
+}
+
+export function getEffectiveSolutionCategories(state: CapabilityMapState): Category[] {
+  const customs = customCategoriesOf(state);
+  if (customs.length === 0) return groupedSeed.solutionCategories;
+  const mapped: Category[] = customs.map((c, idx) => ({
+    id: c.id,
+    name: c.name,
+    fullName: c.fullName,
+    layer: 'solution',
+    displayOrder: MAX_SEED_SOLUTION_DISPLAY_ORDER + idx + 1,
+  }));
+  return [...groupedSeed.solutionCategories, ...mapped];
+}
+
+export function getEffectiveCapabilitiesForCategory(
+  state: CapabilityMapState,
+  categoryId: string,
+): Capability[] {
+  const custom = customCategoriesOf(state).find((c) => c.id === categoryId);
+  if (custom) {
+    return custom.capabilities.map((c) => ({ id: c.id, name: c.name }));
+  }
+  const seedCaps = groupedSeed.capabilitiesByCategory.get(categoryId) ?? [];
+  const extras = customCapabilitiesOf(state)[categoryId] ?? [];
+  if (extras.length === 0) return seedCaps;
+  return [...seedCaps, ...extras.map((c) => ({ id: c.id, name: c.name }))];
+}
+
+export function getAllEffectiveCapabilities(state: CapabilityMapState): Capability[] {
+  const out: Capability[] = [...groupedSeed.allCapabilities];
+  const extras = customCapabilitiesOf(state);
+  for (const list of Object.values(extras)) {
+    for (const cap of list) out.push({ id: cap.id, name: cap.name });
+  }
+  for (const cat of customCategoriesOf(state)) {
+    for (const cap of cat.capabilities) out.push({ id: cap.id, name: cap.name });
+  }
+  return out;
+}
+
+export function isCustomCategoryId(state: CapabilityMapState, categoryId: string): boolean {
+  return customCategoriesOf(state).some((c) => c.id === categoryId);
+}
+
+export function isCustomCapabilityId(state: CapabilityMapState, capabilityId: string): boolean {
+  for (const cat of customCategoriesOf(state)) {
+    if (cat.capabilities.some((c) => c.id === capabilityId)) return true;
+  }
+  for (const list of Object.values(customCapabilitiesOf(state))) {
+    if (list.some((c) => c.id === capabilityId)) return true;
+  }
+  return false;
+}
+
+export function findCustomCapability(
+  state: CapabilityMapState,
+  capabilityId: string,
+): {
+  capability: CustomCapability;
+  ownerCategoryId: string;
+  ownerIsCustomCategory: boolean;
+} | null {
+  for (const cat of customCategoriesOf(state)) {
+    const found = cat.capabilities.find((c) => c.id === capabilityId);
+    if (found) {
+      return { capability: found, ownerCategoryId: cat.id, ownerIsCustomCategory: true };
+    }
+  }
+  const extras = customCapabilitiesOf(state);
+  for (const [catId, list] of Object.entries(extras)) {
+    const found = list.find((c) => c.id === capabilityId);
+    if (found) {
+      return { capability: found, ownerCategoryId: catId, ownerIsCustomCategory: false };
+    }
+  }
+  return null;
+}
+
+export function isSeedSolutionCategoryId(categoryId: string): boolean {
+  return seedSolutionCategoryIds.has(categoryId);
 }

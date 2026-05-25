@@ -13,6 +13,8 @@ function emptyState(overrides: Partial<CapabilityMapState> = {}): CapabilityMapS
     capabilityStatus: {},
     capabilityNotes: {},
     categoryOrder: [],
+    customCategories: [],
+    customCapabilities: {},
     ...overrides,
   };
 }

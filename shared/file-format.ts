@@ -37,11 +37,28 @@ export type CapabilityStatus =
 // categoryOrder is a flat ordered list of solution-category IDs reflecting the
 // user's personalized arrangement across both Active and Inactive sections;
 // IDs absent from the array fall back to the seed's displayOrder.
+
+export interface CustomCapability {
+  id: string; // e.g., "custom-cap-<uuid>"
+  name: string;
+}
+
+export interface CustomCategory {
+  id: string; // e.g., "custom-cat-<uuid>"
+  name: string;
+  fullName?: string;
+  capabilities: CustomCapability[];
+}
+
 export interface CapabilityMapState {
   categoryEnabled: Record<string, boolean>;
   capabilityStatus: Record<string, CapabilityStatus>;
   capabilityNotes: Record<string, string>;
   categoryOrder: string[];
+  // User-added solution-layer categories with their own capabilities.
+  customCategories: CustomCategory[];
+  // Extra capabilities added under existing seed categories, keyed by seed category id.
+  customCapabilities: Record<string, CustomCapability[]>;
 }
 
 export interface CustomerInfo {
@@ -69,6 +86,8 @@ export function emptyDocument(): Document {
       capabilityStatus: {},
       capabilityNotes: {},
       categoryOrder: [],
+      customCategories: [],
+      customCapabilities: {},
     },
   };
 }

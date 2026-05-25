@@ -17,6 +17,8 @@ const sampleDoc: Document = {
       'change-management': 'Q3 rollout',
     },
     categoryOrder: ['itsm', 'csm', 'hrsd'],
+    customCategories: [],
+    customCapabilities: {},
   },
 };
 
@@ -87,6 +89,34 @@ describe('packPamap / unpackPamap', () => {
     });
   });
 
+  it('round-trips a document with custom categories and capabilities', async () => {
+    const docWithCustoms: Document = {
+      customer: { name: 'Acme' },
+      capabilityMap: {
+        categoryEnabled: {},
+        capabilityStatus: { 'custom-cap-001': 'in-use' },
+        capabilityNotes: { 'custom-cap-001': 'pilot' },
+        categoryOrder: ['custom-cat-001'],
+        customCategories: [
+          {
+            id: 'custom-cat-001',
+            name: 'Bespoke Module',
+            capabilities: [{ id: 'custom-cap-001', name: 'Special Flow' }],
+          },
+        ],
+        customCapabilities: {
+          itsm: [{ id: 'custom-cap-002', name: 'Extra capability under ITSM' }],
+        },
+      },
+    };
+    const bytes = await packPamap(docWithCustoms, {
+      appVersion: '0.0.1',
+      fileId: 'cust-1',
+    });
+    const bundle = await unpackPamap(bytes);
+    expect(bundle.document).toEqual(docWithCustoms);
+  });
+
   it('loads a legacy document that lacks categoryOrder by defaulting to []', async () => {
     const zip = new JSZip();
     zip.file(
@@ -115,6 +145,8 @@ describe('packPamap / unpackPamap', () => {
     const bytes = await zip.generateAsync({ type: 'uint8array' });
     const bundle = await unpackPamap(bytes);
     expect(bundle.document.capabilityMap.categoryOrder).toEqual([]);
+    expect(bundle.document.capabilityMap.customCategories).toEqual([]);
+    expect(bundle.document.capabilityMap.customCapabilities).toEqual({});
   });
 
   it('refuses to open a file from a newer format version', async () => {

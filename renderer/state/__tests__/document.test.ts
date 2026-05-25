@@ -136,3 +136,98 @@ describe('clearCategoryCapabilityNotes', () => {
     expect(useDocumentStore.getState().isDirty).toBe(true);
   });
 });
+
+describe('custom categories and capabilities', () => {
+  beforeEach(reset);
+
+  it('addCustomCategory appends to customCategories and to the end of the Active segment', () => {
+    const FIRST = groupedSeed.solutionCategories[0]!;
+    useDocumentStore.getState().setCategoryEnabled(FIRST.id, false);
+    const id = useDocumentStore.getState().addCustomCategory('Bespoke');
+    expect(id).toBeTruthy();
+    const map = useDocumentStore.getState().currentDocument!.capabilityMap;
+    expect(map.customCategories.map((c) => c.name)).toContain('Bespoke');
+    expect(map.categoryOrder).toContain(id!);
+    expect(map.categoryOrder.indexOf(id!)).toBeLessThan(map.categoryOrder.indexOf(FIRST.id));
+  });
+
+  it('addCustomCategory rejects an empty name', () => {
+    const id = useDocumentStore.getState().addCustomCategory('   ');
+    expect(id).toBeNull();
+    expect(
+      useDocumentStore.getState().currentDocument!.capabilityMap.customCategories,
+    ).toHaveLength(0);
+  });
+
+  it('addCapabilityToCategory appends to a custom category', () => {
+    const catId = useDocumentStore.getState().addCustomCategory('Cat A')!;
+    const capId = useDocumentStore.getState().addCapabilityToCategory(catId, 'Feature 1');
+    expect(capId).toBeTruthy();
+    const customCats = useDocumentStore.getState().currentDocument!.capabilityMap.customCategories;
+    expect(customCats[0]!.capabilities[0]).toEqual({ id: capId, name: 'Feature 1' });
+  });
+
+  it('addCapabilityToCategory appends to a seed category via customCapabilities', () => {
+    const FIRST = groupedSeed.solutionCategories[0]!;
+    const capId = useDocumentStore.getState().addCapabilityToCategory(FIRST.id, 'Extra');
+    const extras =
+      useDocumentStore.getState().currentDocument!.capabilityMap.customCapabilities[FIRST.id];
+    expect(extras).toEqual([{ id: capId, name: 'Extra' }]);
+  });
+
+  it('deleteCustomCategory removes capabilities, order, enabled, status, and notes', () => {
+    const catId = useDocumentStore.getState().addCustomCategory('Cat A')!;
+    const capId = useDocumentStore.getState().addCapabilityToCategory(catId, 'Cap A')!;
+    useDocumentStore.getState().setCapabilityStatus(capId, 'in-use');
+    useDocumentStore.getState().setCapabilityNotes(capId, 'pilot');
+    useDocumentStore.getState().setCategoryEnabled(catId, false);
+    useDocumentStore.getState().deleteCustomCategory(catId);
+    const map = useDocumentStore.getState().currentDocument!.capabilityMap;
+    expect(map.customCategories.find((c) => c.id === catId)).toBeUndefined();
+    expect(map.categoryOrder).not.toContain(catId);
+    expect(map.categoryEnabled[catId]).toBeUndefined();
+    expect(map.capabilityStatus[capId]).toBeUndefined();
+    expect(map.capabilityNotes[capId]).toBeUndefined();
+  });
+
+  it('renameCustomCategory updates the name and trims', () => {
+    const catId = useDocumentStore.getState().addCustomCategory('Old')!;
+    useDocumentStore.getState().renameCustomCategory(catId, '  New  ');
+    const cat = useDocumentStore
+      .getState()
+      .currentDocument!.capabilityMap.customCategories.find((c) => c.id === catId);
+    expect(cat!.name).toBe('New');
+  });
+
+  it('renameCapability works for both custom-category and seed-category custom capabilities', () => {
+    const FIRST = groupedSeed.solutionCategories[0]!;
+    const extraId = useDocumentStore.getState().addCapabilityToCategory(FIRST.id, 'Extra A')!;
+    useDocumentStore.getState().renameCapability(extraId, 'Extra A Renamed');
+    expect(
+      useDocumentStore
+        .getState()
+        .currentDocument!.capabilityMap.customCapabilities[FIRST.id]?.find((c) => c.id === extraId)
+        ?.name,
+    ).toBe('Extra A Renamed');
+
+    const catId = useDocumentStore.getState().addCustomCategory('Cat A')!;
+    const capId = useDocumentStore.getState().addCapabilityToCategory(catId, 'Cap A')!;
+    useDocumentStore.getState().renameCapability(capId, 'Cap A v2');
+    const cat = useDocumentStore
+      .getState()
+      .currentDocument!.capabilityMap.customCategories.find((c) => c.id === catId);
+    expect(cat!.capabilities[0]!.name).toBe('Cap A v2');
+  });
+
+  it('deleteCapability cleans status and notes and removes the capability', () => {
+    const FIRST = groupedSeed.solutionCategories[0]!;
+    const capId = useDocumentStore.getState().addCapabilityToCategory(FIRST.id, 'Extra')!;
+    useDocumentStore.getState().setCapabilityStatus(capId, 'planning');
+    useDocumentStore.getState().setCapabilityNotes(capId, 'note');
+    useDocumentStore.getState().deleteCapability(capId);
+    const map = useDocumentStore.getState().currentDocument!.capabilityMap;
+    expect(map.customCapabilities[FIRST.id]).toBeUndefined();
+    expect(map.capabilityStatus[capId]).toBeUndefined();
+    expect(map.capabilityNotes[capId]).toBeUndefined();
+  });
+});

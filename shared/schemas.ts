@@ -17,11 +17,25 @@ export const CapabilityStatusSchema = z.enum([
   'in-use',
 ]);
 
+export const CustomCapabilitySchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+});
+
+export const CustomCategorySchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  fullName: z.string().optional(),
+  capabilities: z.array(CustomCapabilitySchema).default([]),
+});
+
 export const CapabilityMapStateSchema = z.object({
   categoryEnabled: z.record(z.string(), z.boolean()),
   capabilityStatus: z.record(z.string(), CapabilityStatusSchema),
   capabilityNotes: z.record(z.string(), z.string()),
   categoryOrder: z.array(z.string()).default([]),
+  customCategories: z.array(CustomCategorySchema).default([]),
+  customCapabilities: z.record(z.string(), z.array(CustomCapabilitySchema)).default({}),
 });
 
 export const CustomerInfoSchema = z.object({

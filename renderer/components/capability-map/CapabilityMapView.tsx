@@ -21,8 +21,13 @@ import { emptyDocument } from '../../../shared/file-format';
 import type { CapabilityStatus } from '../../../shared/file-format';
 import { useDocumentStore } from '../../state/document';
 import {
+  getAllEffectiveCapabilities,
+  getEffectiveCapabilitiesForCategory,
+  getEffectiveSolutionCategories,
   groupedSeed,
   isCategoryEnabled,
+  isCustomCapabilityId,
+  isCustomCategoryId,
   partitionCategories,
   seed,
 } from '../../lib/capability-map';
@@ -32,6 +37,7 @@ import {
   getCapabilityStatus,
 } from '../../lib/capability-status';
 import { exportCapabilityMap, type ExportFormat } from '../../lib/export';
+import { AddCategoryTile } from './AddCategoryTile';
 import { AiNativeSection } from './AiNativeSection';
 import { CategoryCard } from './CategoryCard';
 import { HeaderStrip } from './HeaderStrip';
@@ -52,6 +58,12 @@ export function CapabilityMapView() {
   const setCategoryCapabilityStatuses = useDocumentStore((s) => s.setCategoryCapabilityStatuses);
   const clearCategoryCapabilityNotes = useDocumentStore((s) => s.clearCategoryCapabilityNotes);
   const setCategoryOrder = useDocumentStore((s) => s.setCategoryOrder);
+  const addCustomCategory = useDocumentStore((s) => s.addCustomCategory);
+  const renameCustomCategory = useDocumentStore((s) => s.renameCustomCategory);
+  const deleteCustomCategory = useDocumentStore((s) => s.deleteCustomCategory);
+  const addCapabilityToCategory = useDocumentStore((s) => s.addCapabilityToCategory);
+  const renameCapability = useDocumentStore((s) => s.renameCapability);
+  const deleteCapability = useDocumentStore((s) => s.deleteCapability);
 
   const [searchTermRaw, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -80,7 +92,10 @@ export function CapabilityMapView() {
   const capabilityStatus = doc.capabilityMap.capabilityStatus;
   const capabilityNotes = doc.capabilityMap.capabilityNotes;
 
-  const solutionCategories = groupedSeed.solutionCategories;
+  const solutionCategories = useMemo(
+    () => getEffectiveSolutionCategories(doc.capabilityMap),
+    [doc.capabilityMap],
+  );
 
   const { active: activeCategories, inactive: inactiveCategories } = useMemo(
     () => partitionCategories(solutionCategories, doc.capabilityMap),
@@ -98,11 +113,18 @@ export function CapabilityMapView() {
     return { enabledCount: enabled, totalCount: solutionCategories.length };
   }, [solutionCategories, categoryEnabled]);
 
-  const summary = useMemo(() => {
-    const allIds = groupedSeed.allCapabilities.map((c) => c.id);
-    return countCapabilitiesByStatus(allIds, capabilityStatus);
-  }, [capabilityStatus]);
+  const allEffectiveCapabilities = useMemo(
+    () => getAllEffectiveCapabilities(doc.capabilityMap),
+    [doc.capabilityMap],
+  );
 
+  const summary = useMemo(() => {
+    const allIds = allEffectiveCapabilities.map((c) => c.id);
+    return countCapabilitiesByStatus(allIds, capabilityStatus);
+  }, [allEffectiveCapabilities, capabilityStatus]);
+
+  // Adoption % deliberately excludes custom items: customer-added
+  // categories/capabilities don't represent the seed offering being measured.
   const adoption = useMemo(
     () =>
       computeAdoption(
@@ -230,12 +252,21 @@ export function CapabilityMapView() {
   }
 
   const selectedCapability = popover
-    ? (groupedSeed.allCapabilities.find((c) => c.id === popover.id) ?? null)
+    ? (allEffectiveCapabilities.find((c) => c.id === popover.id) ?? null)
     : null;
+  const selectedIsCustomCapability = popover
+    ? isCustomCapabilityId(doc.capabilityMap, popover.id)
+    : false;
 
   const renderCard = (cat: (typeof solutionCategories)[number]) => {
     const enabled = isCategoryEnabled(categoryEnabled, cat.id);
-    const capabilities = groupedSeed.capabilitiesByCategory.get(cat.id) ?? [];
+    const capabilities = getEffectiveCapabilitiesForCategory(doc.capabilityMap, cat.id);
+    const isCustom = isCustomCategoryId(doc.capabilityMap, cat.id);
+    // Adoption excludes custom items: empty for custom categories,
+    // seed-only for seed categories with custom extras.
+    const adoptionCapabilityIds = isCustom
+      ? []
+      : (groupedSeed.capabilitiesByCategory.get(cat.id) ?? []).map((c) => c.id);
     const Card = dndMounted ? SortableCategoryCard : CategoryCard;
     const isLeaving = leavingIds.has(cat.id);
     return (
@@ -243,7 +274,9 @@ export function CapabilityMapView() {
         key={cat.id}
         category={cat}
         capabilities={capabilities}
+        adoptionCapabilityIds={adoptionCapabilityIds}
         enabled={enabled}
+        isCustomCategory={isCustom}
         isLeaving={isLeaving}
         searchTerm={searchTerm}
         statusFilter={statusFilter}
@@ -254,6 +287,9 @@ export function CapabilityMapView() {
         onPillClick={handlePillClick}
         onBulkSetStatus={(ids, status) => setCategoryCapabilityStatuses(ids, status)}
         onBulkClearNotes={(ids) => clearCategoryCapabilityNotes(ids)}
+        onRenameCategory={isCustom ? renameCustomCategory : undefined}
+        onDeleteCategory={isCustom ? deleteCustomCategory : undefined}
+        onAddCapability={(categoryId, name) => addCapabilityToCategory(categoryId, name)}
       />
     );
   };
@@ -297,6 +333,7 @@ export function CapabilityMapView() {
                 <SortableContext items={activeIds} strategy={rectSortingStrategy}>
                   <div className="grid gap-3" style={GRID_STYLE}>
                     {activeCategories.map(renderCard)}
+                    <AddCategoryTile onAdd={(name) => addCustomCategory(name)} />
                   </div>
                 </SortableContext>
 
@@ -329,6 +366,7 @@ export function CapabilityMapView() {
               <>
                 <div className="grid gap-3" style={GRID_STYLE}>
                   {activeCategories.map(renderCard)}
+                  <AddCategoryTile onAdd={(name) => addCustomCategory(name)} />
                 </div>
 
                 <AiNativeSection
@@ -365,8 +403,13 @@ export function CapabilityMapView() {
           capabilityName={selectedCapability.name}
           status={getCapabilityStatus(capabilityStatus, popover.id)}
           notes={capabilityNotes[popover.id] ?? ''}
+          isCustomCapability={selectedIsCustomCapability}
           onStatusChange={(next) => setCapabilityStatus(popover.id, next)}
           onNotesChange={(next) => setCapabilityNotes(popover.id, next)}
+          onRename={
+            selectedIsCustomCapability ? (name) => renameCapability(popover.id, name) : undefined
+          }
+          onDelete={selectedIsCustomCapability ? () => deleteCapability(popover.id) : undefined}
           onClose={closePopover}
         />
       )}

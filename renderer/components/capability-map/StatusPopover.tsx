@@ -1,5 +1,6 @@
 'use client';
 
+import { Trash2 } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { CapabilityStatus } from '../../../shared/file-format';
 import { STATUSES } from '../../lib/capability-status';
@@ -9,8 +10,11 @@ interface Props {
   capabilityName: string;
   status: CapabilityStatus;
   notes: string;
+  isCustomCapability: boolean;
   onStatusChange: (next: CapabilityStatus) => void;
   onNotesChange: (next: string) => void;
+  onRename?: (name: string) => void;
+  onDelete?: () => void;
   onClose: () => void;
 }
 
@@ -49,8 +53,11 @@ export function StatusPopover({
   capabilityName,
   status,
   notes,
+  isCustomCapability,
   onStatusChange,
   onNotesChange,
+  onRename,
+  onDelete,
   onClose,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
@@ -107,6 +114,30 @@ export function StatusPopover({
 
   const groupId = `status-radio-${capabilityName.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`;
 
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState(capabilityName);
+
+  function startRename() {
+    setNameDraft(capabilityName);
+    setEditingName(true);
+  }
+
+  function commitRename() {
+    const trimmed = nameDraft.trim();
+    if (trimmed && trimmed !== capabilityName) onRename?.(trimmed);
+    setEditingName(false);
+  }
+
+  function handleDelete() {
+    const ok = window.confirm(
+      `Delete custom capability "${capabilityName}"? This cannot be undone.`,
+    );
+    if (ok) {
+      onDelete?.();
+      onClose();
+    }
+  }
+
   return (
     <div
       ref={ref}
@@ -124,8 +155,49 @@ export function StatusPopover({
       }}
       className="rounded border border-border-strong bg-bg-overlay p-3 shadow-xl"
     >
-      <header className="mb-2 truncate text-sm font-medium text-fg" title={capabilityName}>
-        {capabilityName}
+      <header className="mb-2 flex items-center gap-1.5">
+        {isCustomCapability && editingName ? (
+          <input
+            autoFocus
+            value={nameDraft}
+            onChange={(e) => setNameDraft(e.target.value)}
+            onBlur={commitRename}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                commitRename();
+              } else if (e.key === 'Escape') {
+                e.preventDefault();
+                setEditingName(false);
+              }
+            }}
+            aria-label={`Rename ${capabilityName}`}
+            className="h-6 min-w-0 flex-1 rounded-sm border border-accent bg-bg px-1.5 text-sm font-medium text-fg focus:outline-none"
+          />
+        ) : (
+          <h2
+            className={[
+              'min-w-0 flex-1 truncate text-sm font-medium text-fg',
+              isCustomCapability ? 'cursor-text' : '',
+            ].join(' ')}
+            title={capabilityName}
+            onDoubleClick={() => {
+              if (isCustomCapability && onRename) startRename();
+            }}
+          >
+            {capabilityName}
+          </h2>
+        )}
+        {isCustomCapability && onDelete && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            aria-label={`Delete ${capabilityName}`}
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm text-fg-muted hover:bg-bg-sunken hover:text-red-600 focus:outline-none focus:ring-1 focus:ring-accent dark:hover:text-red-400"
+          >
+            <Trash2 size={12} aria-hidden="true" />
+          </button>
+        )}
       </header>
 
       <fieldset className="mb-3" aria-label="Status">

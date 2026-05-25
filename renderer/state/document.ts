@@ -1,6 +1,17 @@
 import { create } from 'zustand';
-import { emptyDocument, type CapabilityStatus, type Document } from '../../shared/file-format';
-import { groupedSeed, isCategoryInactive } from '../lib/capability-map';
+import {
+  emptyDocument,
+  type CapabilityStatus,
+  type CustomCapability,
+  type CustomCategory,
+  type Document,
+} from '../../shared/file-format';
+import {
+  findCustomCapability,
+  getEffectiveSolutionCategories,
+  isCategoryInactive,
+  isCustomCategoryId,
+} from '../lib/capability-map';
 
 export interface DocumentState {
   currentDocument: Document | null;
@@ -20,9 +31,23 @@ export interface DocumentState {
   ) => void;
   clearCategoryCapabilityNotes: (capabilityIds: readonly string[]) => void;
   setCategoryOrder: (order: string[]) => void;
+  addCustomCategory: (name: string) => string | null;
+  renameCustomCategory: (categoryId: string, name: string) => void;
+  deleteCustomCategory: (categoryId: string) => void;
+  addCapabilityToCategory: (categoryId: string, name: string) => string | null;
+  renameCapability: (capabilityId: string, name: string) => void;
+  deleteCapability: (capabilityId: string) => void;
   markDirty: () => void;
   markClean: (savedAt?: number) => void;
   setFilePath: (path: string | null) => void;
+}
+
+function makeCustomCategoryId(): string {
+  return `custom-cat-${crypto.randomUUID()}`;
+}
+
+function makeCustomCapabilityId(): string {
+  return `custom-cap-${crypto.randomUUID()}`;
 }
 
 function categoryInactiveIn(doc: Document, categoryId: string): boolean {
@@ -41,21 +66,21 @@ function applyTransitions(
   affectedCategoryIds: readonly string[],
 ): Document {
   if (affectedCategoryIds.length === 0) return after;
-  // Canonical full order: existing order + missing solution categories in seed order.
+  // Canonical full order: existing order + missing solution categories
+  // (seed + custom) in their default order.
+  const effectiveSolution = getEffectiveSolutionCategories(after.capabilityMap);
+  const effectiveIds = new Set(effectiveSolution.map((c) => c.id));
   const existing = after.capabilityMap.categoryOrder;
   const present = new Set(existing);
   const fullOrder: string[] = [...existing];
-  for (const c of groupedSeed.solutionCategories) {
+  for (const c of effectiveSolution) {
     if (!present.has(c.id)) fullOrder.push(c.id);
   }
 
   let nextOrder = fullOrder;
   let mutated = false;
   for (const categoryId of affectedCategoryIds) {
-    if (!groupedSeed.capabilitiesByCategory.has(categoryId)) continue;
-    // Only solution categories are reorderable.
-    const isSolution = groupedSeed.solutionCategories.some((c) => c.id === categoryId);
-    if (!isSolution) continue;
+    if (!effectiveIds.has(categoryId)) continue;
 
     const wasInactive = categoryInactiveIn(before, categoryId);
     const isInactive = categoryInactiveIn(after, categoryId);
@@ -237,6 +262,228 @@ export const useDocumentStore = create<DocumentState>((set) => ({
         currentDocument: {
           ...base,
           capabilityMap: { ...base.capabilityMap, categoryOrder: order },
+        },
+        isDirty: true,
+      };
+    }),
+
+  addCustomCategory: (name) => {
+    const trimmed = name.trim();
+    if (!trimmed) return null;
+    const newId = makeCustomCategoryId();
+    set((state) => {
+      const base = state.currentDocument ?? emptyDocument();
+      const newCat: CustomCategory = { id: newId, name: trimmed, capabilities: [] };
+      const nextCustom = [...(base.capabilityMap.customCategories ?? []), newCat];
+      // Place at the end of the Active segment in categoryOrder.
+      // Build the canonical order first (existing + missing seed/custom ids).
+      const orderWithNew = [...base.capabilityMap.categoryOrder];
+      // Determine where the active segment ends.
+      let insertAt = 0;
+      for (let i = orderWithNew.length - 1; i >= 0; i--) {
+        const id = orderWithNew[i]!;
+        if (!isCategoryInactive(base.capabilityMap, id)) {
+          insertAt = i + 1;
+          break;
+        }
+      }
+      if (orderWithNew.length === 0) insertAt = 0;
+      const nextOrder = [
+        ...orderWithNew.slice(0, insertAt),
+        newId,
+        ...orderWithNew.slice(insertAt),
+      ];
+      return {
+        currentDocument: {
+          ...base,
+          capabilityMap: {
+            ...base.capabilityMap,
+            customCategories: nextCustom,
+            categoryOrder: nextOrder,
+          },
+        },
+        isDirty: true,
+      };
+    });
+    return newId;
+  },
+
+  renameCustomCategory: (categoryId, name) =>
+    set((state) => {
+      const trimmed = name.trim();
+      if (!trimmed) return state;
+      const base = state.currentDocument ?? emptyDocument();
+      const customs = base.capabilityMap.customCategories ?? [];
+      const idx = customs.findIndex((c) => c.id === categoryId);
+      if (idx < 0) return state;
+      if (customs[idx]!.name === trimmed) return state;
+      const next = [...customs];
+      next[idx] = { ...next[idx]!, name: trimmed };
+      return {
+        currentDocument: {
+          ...base,
+          capabilityMap: { ...base.capabilityMap, customCategories: next },
+        },
+        isDirty: true,
+      };
+    }),
+
+  deleteCustomCategory: (categoryId) =>
+    set((state) => {
+      const base = state.currentDocument ?? emptyDocument();
+      const customs = base.capabilityMap.customCategories ?? [];
+      const target = customs.find((c) => c.id === categoryId);
+      if (!target) return state;
+      const nextCustom = customs.filter((c) => c.id !== categoryId);
+      const capIdsToRemove = new Set(target.capabilities.map((c) => c.id));
+      const nextStatus = { ...base.capabilityMap.capabilityStatus };
+      const nextNotes = { ...base.capabilityMap.capabilityNotes };
+      for (const id of capIdsToRemove) {
+        delete nextStatus[id];
+        delete nextNotes[id];
+      }
+      const nextEnabled = { ...base.capabilityMap.categoryEnabled };
+      delete nextEnabled[categoryId];
+      const nextOrder = base.capabilityMap.categoryOrder.filter((id) => id !== categoryId);
+      return {
+        currentDocument: {
+          ...base,
+          capabilityMap: {
+            ...base.capabilityMap,
+            customCategories: nextCustom,
+            capabilityStatus: nextStatus,
+            capabilityNotes: nextNotes,
+            categoryEnabled: nextEnabled,
+            categoryOrder: nextOrder,
+          },
+        },
+        isDirty: true,
+      };
+    }),
+
+  addCapabilityToCategory: (categoryId, name) => {
+    const trimmed = name.trim();
+    if (!trimmed) return null;
+    const newId = makeCustomCapabilityId();
+    set((state) => {
+      const base = state.currentDocument ?? emptyDocument();
+      const newCap: CustomCapability = { id: newId, name: trimmed };
+      if (isCustomCategoryId(base.capabilityMap, categoryId)) {
+        const customs = base.capabilityMap.customCategories ?? [];
+        const next = customs.map((c) =>
+          c.id === categoryId ? { ...c, capabilities: [...c.capabilities, newCap] } : c,
+        );
+        return {
+          currentDocument: {
+            ...base,
+            capabilityMap: { ...base.capabilityMap, customCategories: next },
+          },
+          isDirty: true,
+        };
+      }
+      const extras = base.capabilityMap.customCapabilities ?? {};
+      const list = extras[categoryId] ?? [];
+      const nextExtras = { ...extras, [categoryId]: [...list, newCap] };
+      return {
+        currentDocument: {
+          ...base,
+          capabilityMap: { ...base.capabilityMap, customCapabilities: nextExtras },
+        },
+        isDirty: true,
+      };
+    });
+    return newId;
+  },
+
+  renameCapability: (capabilityId, name) =>
+    set((state) => {
+      const trimmed = name.trim();
+      if (!trimmed) return state;
+      const base = state.currentDocument ?? emptyDocument();
+      const found = findCustomCapability(base.capabilityMap, capabilityId);
+      if (!found) return state;
+      if (found.capability.name === trimmed) return state;
+      if (found.ownerIsCustomCategory) {
+        const customs = base.capabilityMap.customCategories ?? [];
+        const next = customs.map((c) =>
+          c.id !== found.ownerCategoryId
+            ? c
+            : {
+                ...c,
+                capabilities: c.capabilities.map((cap) =>
+                  cap.id === capabilityId ? { ...cap, name: trimmed } : cap,
+                ),
+              },
+        );
+        return {
+          currentDocument: {
+            ...base,
+            capabilityMap: { ...base.capabilityMap, customCategories: next },
+          },
+          isDirty: true,
+        };
+      }
+      const extras = base.capabilityMap.customCapabilities ?? {};
+      const list = extras[found.ownerCategoryId] ?? [];
+      const nextList = list.map((cap) =>
+        cap.id === capabilityId ? { ...cap, name: trimmed } : cap,
+      );
+      return {
+        currentDocument: {
+          ...base,
+          capabilityMap: {
+            ...base.capabilityMap,
+            customCapabilities: { ...extras, [found.ownerCategoryId]: nextList },
+          },
+        },
+        isDirty: true,
+      };
+    }),
+
+  deleteCapability: (capabilityId) =>
+    set((state) => {
+      const base = state.currentDocument ?? emptyDocument();
+      const found = findCustomCapability(base.capabilityMap, capabilityId);
+      if (!found) return state;
+      const nextStatus = { ...base.capabilityMap.capabilityStatus };
+      const nextNotes = { ...base.capabilityMap.capabilityNotes };
+      delete nextStatus[capabilityId];
+      delete nextNotes[capabilityId];
+      if (found.ownerIsCustomCategory) {
+        const customs = base.capabilityMap.customCategories ?? [];
+        const next = customs.map((c) =>
+          c.id !== found.ownerCategoryId
+            ? c
+            : { ...c, capabilities: c.capabilities.filter((cap) => cap.id !== capabilityId) },
+        );
+        return {
+          currentDocument: {
+            ...base,
+            capabilityMap: {
+              ...base.capabilityMap,
+              customCategories: next,
+              capabilityStatus: nextStatus,
+              capabilityNotes: nextNotes,
+            },
+          },
+          isDirty: true,
+        };
+      }
+      const extras = base.capabilityMap.customCapabilities ?? {};
+      const list = extras[found.ownerCategoryId] ?? [];
+      const nextList = list.filter((cap) => cap.id !== capabilityId);
+      const nextExtras = { ...extras };
+      if (nextList.length === 0) delete nextExtras[found.ownerCategoryId];
+      else nextExtras[found.ownerCategoryId] = nextList;
+      return {
+        currentDocument: {
+          ...base,
+          capabilityMap: {
+            ...base.capabilityMap,
+            customCapabilities: nextExtras,
+            capabilityStatus: nextStatus,
+            capabilityNotes: nextNotes,
+          },
         },
         isDirty: true,
       };
