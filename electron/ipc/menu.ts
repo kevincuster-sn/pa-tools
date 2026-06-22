@@ -1,5 +1,6 @@
 import { BrowserWindow, Menu, MenuItemConstructorOptions } from 'electron';
 import { IPC_CHANNELS } from '../../shared/api';
+import { checkForUpdatesManual } from '../updater';
 
 export interface MenuOptions {
   getWindow: () => BrowserWindow | null;
@@ -30,6 +31,10 @@ export function buildAppMenu(opts: MenuOptions): void {
             label: 'PA Tools',
             submenu: [
               { role: 'about' },
+              {
+                label: 'Check for Updates…',
+                click: () => void checkForUpdatesManual(opts.getWindow),
+              },
               { type: 'separator' },
               { role: 'services' },
               { type: 'separator' },
@@ -86,6 +91,11 @@ export function buildAppMenu(opts: MenuOptions): void {
         {
           label: 'About PA Tools',
           click: () => send('help:about'),
+        },
+        { type: 'separator' },
+        {
+          label: 'Check for Updates…',
+          click: () => void checkForUpdatesManual(opts.getWindow),
         },
       ],
     },

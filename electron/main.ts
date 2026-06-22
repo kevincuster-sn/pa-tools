@@ -9,6 +9,7 @@ import {
   onRecentFilesChanged,
   pruneMissing,
 } from './recent-files';
+import { initAutoUpdater } from './updater';
 import { loadWindowState, saveWindowState } from './window-state';
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -100,6 +101,10 @@ app.whenReady().then(async () => {
   onRecentFilesChanged(() => rebuildMenu());
 
   await createWindow();
+
+  if (!isDev) {
+    initAutoUpdater(() => mainWindow);
+  }
 
   app.on('activate', async () => {
     if (BrowserWindow.getAllWindows().length === 0) {

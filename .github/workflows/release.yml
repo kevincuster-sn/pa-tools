@@ -1,0 +1,46 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write # allows GITHUB_TOKEN to create releases and upload artifacts
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+          - os: windows-latest
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Reads packageManager: pnpm@11.1.3 from package.json
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build renderer (Next.js)
+        run: pnpm run build:next
+
+      - name: Build main process (TypeScript)
+        run: pnpm run build:electron
+
+      - name: Package and publish
+        run: pnpm exec electron-builder --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Suppress auto-discovery of a local Mac signing identity in CI.
+          # Remove this line (and add CSC_LINK/CSC_KEY_PASSWORD) when ready to sign.
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
