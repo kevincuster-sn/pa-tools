@@ -1,5 +1,6 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, net, protocol } from 'electron';
 import path from 'path';
+import { pathToFileURL } from 'url';
 import { IPC_CHANNELS } from '../shared/api';
 import { registerFileIoHandlers } from './ipc/file-io';
 import { buildAppMenu } from './ipc/menu';
@@ -11,6 +12,11 @@ import {
 } from './recent-files';
 import { initAutoUpdater } from './updater';
 import { loadWindowState, saveWindowState } from './window-state';
+
+// Must be called before app.whenReady() so Electron sets up the scheme correctly.
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'app', privileges: { secure: true, standard: true } },
+]);
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -74,11 +80,21 @@ async function createWindow(): Promise<void> {
     await mainWindow.loadURL('http://localhost:3000');
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   } else {
-    await mainWindow.loadFile(path.join(__dirname, '..', '..', 'renderer', 'out', 'index.html'));
+    await mainWindow.loadURL('app://localhost/index.html');
   }
 }
 
 app.whenReady().then(async () => {
+  const rendererBase = path.resolve(path.join(__dirname, '..', '..', 'renderer', 'out'));
+  protocol.handle('app', (request) => {
+    const url = new URL(request.url);
+    const filePath = path.resolve(path.join(rendererBase, url.pathname));
+    if (!filePath.startsWith(rendererBase)) {
+      return new Response('Forbidden', { status: 403 });
+    }
+    return net.fetch(pathToFileURL(filePath).toString());
+  });
+
   registerFileIoHandlers();
 
   ipcMain.on(IPC_CHANNELS.setDirty, (_event, dirty: boolean) => {
