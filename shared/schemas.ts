@@ -44,9 +44,39 @@ export const CustomerInfoSchema = z.object({
   notes: z.string().optional(),
 });
 
+// ---- Adoption Roadmap schemas ---------------------------------------------
+
+export const RoadmapColumnSchema = z.object({
+  id: z.string().min(1),
+  title: z.string(),
+});
+
+export const RoadmapSwimlaneSchema = z.object({
+  id: z.string().min(1),
+  title: z.string(),
+});
+
+export const RoadmapCardSchema = z.object({
+  id: z.string().min(1),
+  capabilityId: z.string().min(1),
+  columnId: z.string().min(1),
+  swimlaneId: z.string().nullable(),
+});
+
+export const AdoptionRoadmapSchema = z.object({
+  id: z.string().min(1),
+  name: z.string(),
+  columns: z.array(RoadmapColumnSchema).default([]),
+  swimlanes: z.array(RoadmapSwimlaneSchema).default([]),
+  cards: z.array(RoadmapCardSchema).default([]),
+});
+
+// ---------------------------------------------------------------------------
+
 export const DocumentSchema = z.object({
   customer: CustomerInfoSchema,
   capabilityMap: CapabilityMapStateSchema,
+  adoptionRoadmaps: z.array(AdoptionRoadmapSchema).default([]),
 });
 
 export class PamapValidationError extends Error {

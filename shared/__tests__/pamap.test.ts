@@ -20,6 +20,7 @@ const sampleDoc: Document = {
     customCategories: [],
     customCapabilities: {},
   },
+  adoptionRoadmaps: [],
 };
 
 describe('packPamap / unpackPamap', () => {
@@ -108,6 +109,7 @@ describe('packPamap / unpackPamap', () => {
           itsm: [{ id: 'custom-cap-002', name: 'Extra capability under ITSM' }],
         },
       },
+      adoptionRoadmaps: [],
     };
     const bytes = await packPamap(docWithCustoms, {
       appVersion: '0.0.1',

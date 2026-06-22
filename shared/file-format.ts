@@ -67,9 +67,39 @@ export interface CustomerInfo {
   notes?: string;
 }
 
+// ---- Adoption Roadmap types ------------------------------------------------
+
+export interface RoadmapColumn {
+  id: string; // "rm-col-<uuid>"
+  title: string;
+}
+
+export interface RoadmapSwimlane {
+  id: string; // "rm-lane-<uuid>"
+  title: string;
+}
+
+export interface RoadmapCard {
+  id: string; // "rm-card-<uuid>" — card instance, distinct from the capability
+  capabilityId: string; // reference into capabilityMap (seed or custom id)
+  columnId: string;
+  swimlaneId: string | null; // null when the board has no swimlanes
+}
+
+export interface AdoptionRoadmap {
+  id: string; // "roadmap-<uuid>"
+  name: string;
+  columns: RoadmapColumn[];
+  swimlanes: RoadmapSwimlane[]; // empty array → no swimlanes (single-row kanban)
+  cards: RoadmapCard[]; // all cards; within-cell order = relative array order
+}
+
+// ---------------------------------------------------------------------------
+
 export interface Document {
   customer: CustomerInfo;
   capabilityMap: CapabilityMapState;
+  adoptionRoadmaps: AdoptionRoadmap[];
 }
 
 // In-memory representation of a loaded .pamap.
@@ -89,5 +119,6 @@ export function emptyDocument(): Document {
       customCategories: [],
       customCapabilities: {},
     },
+    adoptionRoadmaps: [],
   };
 }

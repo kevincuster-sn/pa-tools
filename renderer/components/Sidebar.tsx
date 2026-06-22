@@ -23,7 +23,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { id: 'capability-map', label: 'Capability Map', icon: LayoutGrid, href: '/capability-map' },
-  { id: 'adoption-roadmap', label: 'Adoption Roadmap', icon: Route, disabled: true },
+  { id: 'adoption-roadmap', label: 'Adoption Roadmap', icon: Route, href: '/adoption-roadmap' },
   { id: 'technical-roadmap', label: 'Technical Roadmap', icon: Wrench, disabled: true },
 ];
 
